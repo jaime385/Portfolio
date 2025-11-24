@@ -1,12 +1,522 @@
-<!DOCTYPE html> 
-<html lang="en"> 
-<head> 
-    <meta charset="UTF-8" /> 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /> 
-    <title>Portfolio – Jaime Stewart Brenes Rojas</title> 
-    <link rel="stylesheet" href="assets/css/style.css" /> 
-</head> 
-<body class="bg-zinc-950 text-zinc-100"> 
-    <h1>Portfolio Base Ready</h1> 
-</body> 
-</html> 
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jaime Brenes Rojas · Industrial Automation Engineer</title>
+    <meta name="description"
+        content="DCS / Industrial Automation Engineer portfolio – Ovation, ICS networking, log analytics, HMI migration, and protocol tooling." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Smooth scroll + nicer focus ring */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        :focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(236, 236, 241, 0.35);
+            border-radius: 12px;
+        }
+
+        /* Pills: base style, JS just reinforces */
+        .pill {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .12);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-zinc-950 text-zinc-100">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-zinc-950/70 border-b border-zinc-800">
+        <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+            <a href="#home" class="text-xl font-semibold tracking-tight">Jaime Brenes Rojas</a>
+            <nav class="hidden md:flex gap-6 text-sm">
+                <a href="#projects" class="hover:text-white">Projects</a>
+                <a href="#experience" class="hover:text-white">Experience</a>
+                <a href="#skills" class="hover:text-white">Skills</a>
+                <a href="#contact" class="hover:text-white">Contact</a>
+            </nav>
+            <button id="menuBtn" class="md:hidden text-sm px-3 py-2 rounded-xl border border-white/20">Menu</button>
+        </div>
+        <nav id="mobileNav" class="md:hidden hidden border-t border-zinc-800 px-4 pb-4">
+            <div class="flex flex-col gap-2 text-sm pt-2">
+                <a href="#projects" class="hover:text-white">Projects</a>
+                <a href="#experience" class="hover:text-white">Experience</a>
+                <a href="#skills" class="hover:text-white">Skills</a>
+                <a href="#contact" class="hover:text-white">Contact</a>
+                <a href="#resume" class="hover:text-white">Résumé</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero -->
+    <section id="home" class="mx-auto max-w-6xl px-4 py-16 md:py-24">
+        <div class="grid md:grid-cols-5 gap-10 items-center">
+            <div class="md:col-span-3">
+                <p class="text-xs uppercase tracking-[0.2em] text-zinc-400">DCS · Ovation · ICS Networking</p>
+                <h1 class="mt-3 text-3xl md:text-5xl font-bold leading-tight">
+                    Industrial Automation Engineer building tools for real plants
+                </h1>
+                <p class="mt-4 text-zinc-300 text-sm md:text-base leading-relaxed">
+                    Results-oriented DCS/Industrial Automation Engineer with experience across power generation and
+                    water
+                    treatment plants. I combine
+                    <span class="font-semibold">Ovation DCS, ICS networking, and protocol troubleshooting</span>
+                    with custom tools in C#, Lua, JavaScript, and Python to make control systems more transparent,
+                    diagnosable, and resilient.
+                </p>
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <a href="#projects" class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 transition">
+                        View projects
+                    </a>
+                    <a href="#contact"
+                        class="px-4 py-2 rounded-2xl border border-white/20 hover:bg-white/10 transition">
+                        Get in touch
+                    </a>
+                </div>
+                <div class="mt-6 text-xs text-zinc-400">
+                    Based in Cartago, Costa Rica · Open to remote collaboration and field work
+                </div>
+            </div>
+
+            <!-- Hero side card -->
+            <div class="md:col-span-2">
+                <div
+                    class="relative rounded-3xl p-6 border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 shadow-xl">
+                    <h3 class="text-sm font-semibold">Quick profile</h3>
+                    <ul class="mt-3 space-y-2 text-sm text-zinc-300">
+                        <li>• Emerson Ovation DCS, HMI/SCADA, datalinks</li>
+                        <li>• ICS protocols: ICCP/MMS, Modbus, OPC UA/DA, DNP3</li>
+                        <li>• Network segmentation, VLANs, Cisco IOS XE</li>
+                        <li>• Logs, Wireshark dissectors, JSON-based tooling</li>
+                        <li>• Field assignments across LATAM & USA (L1-B)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="lab" class="mx-auto max-w-6xl px-4 py-20">
+        <h2 class="text-2xl md:text-3xl font-bold mb-6">Interactive Lab</h2>
+        <p class="text-sm text-zinc-400 mb-4">Experimental visual simulations of science and engineering concepts.
+            (Coming soon!)</p>
+        <div id="p5-holder" class="w-full h-[300px] rounded-3xl overflow-hidden border border-zinc-800 shadow-lg"></div>
+    </section>
+
+    <!-- Projects -->
+    <section id="projects" class="mx-auto max-w-6xl px-4 py-12">
+        <div class="flex items-end justify-between gap-4">
+            <h2 class="text-2xl md:text-3xl font-bold">Featured projects</h2>
+            <a href="#contact" class="text-sm text-zinc-400 hover:text-white whitespace-nowrap">
+                Want a live demo? Contact me →
+            </a>
+        </div>
+
+        <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Log / analytics style app -->
+            <article
+                class="group rounded-3xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 transition shadow-lg overflow-hidden">
+                <div class="p-5 flex flex-col h-full">
+                    <h3 class="text-lg font-semibold group-hover:underline underline-offset-4 decoration-zinc-500">
+                        Log analysis & diagnostics
+                    </h3>
+                    <p class="mt-2 text-sm text-zinc-400">
+                        Desktop application focused on parsing, organizing and visualizing operational logs from
+                        industrial systems.
+                    </p>
+                    <ul class="mt-3 space-y-1 text-sm text-zinc-300 list-disc pl-5">
+                        <li>Highlights patterns and anomalies across multiple log sources.</li>
+                        <li>Builds timelines of key operational events for faster incident reviews.</li>
+                        <li>Uses interactive charts and dashboards to make trends easy to spot.</li>
+                    </ul>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span class="pill">C#</span>
+                        <span class="pill">.NET</span>
+                        <span class="pill">WPF</span>
+                        <span class="pill">Data visualization</span>
+                    </div>
+                </div>
+            </article>
+
+            <!-- HMI / migration style app -->
+            <article
+                class="group rounded-3xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 transition shadow-lg overflow-hidden">
+                <div class="p-5 flex flex-col h-full">
+                    <h3 class="text-lg font-semibold group-hover:underline underline-offset-4 decoration-zinc-500">
+                        HMI migration & visualization
+                    </h3>
+                    <p class="mt-2 text-sm text-zinc-400">
+                        Engineering tool that converts legacy configuration files into structured data and modern
+                        visual layouts.
+                    </p>
+                    <ul class="mt-3 space-y-1 text-sm text-zinc-300 list-disc pl-5">
+                        <li>Extracts shapes, text and properties from existing graphic definitions.</li>
+                        <li>Builds hierarchical views to understand how screens and macros relate.</li>
+                        <li>Generates JSON-style outputs ready for modern HMI platforms.</li>
+                    </ul>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span class="pill">C#</span>
+                        <span class="pill">WPF</span>
+                        <span class="pill">JSON</span>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Protocol / logger style app -->
+            <article
+                class="group rounded-3xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 transition shadow-lg overflow-hidden">
+                <div class="p-5 flex flex-col h-full">
+                    <h3 class="text-lg font-semibold group-hover:underline underline-offset-4 decoration-zinc-500">
+                        Protocol monitoring & logging
+                    </h3>
+                    <p class="mt-2 text-sm text-zinc-400">
+                        Custom extensions for packet analysis software to capture and store control system data in a
+                        reusable format.
+                    </p>
+                    <ul class="mt-3 space-y-1 text-sm text-zinc-300 list-disc pl-5">
+                        <li>Decodes industrial protocol messages into readable values.</li>
+                        <li>Stores time-stamped samples in portable data files.</li>
+                        <li>Powers web-based charts for exploring behavior over time.</li>
+                    </ul>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span class="pill">Lua</span>
+                        <span class="pill">Packet analysis</span>
+                        <span class="pill">JSON</span>
+                        <span class="pill">Web charts</span>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Network / topology style app -->
+            <article
+                class="group rounded-3xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 transition shadow-lg overflow-hidden">
+                <div class="p-5 flex flex-col h-full">
+                    <h3 class="text-lg font-semibold group-hover:underline underline-offset-4 decoration-zinc-500">
+                        Network topology exploration
+                    </h3>
+                    <p class="mt-2 text-sm text-zinc-400">
+                        Visual environment for exploring how switches, routers and control devices are arranged in an
+                        industrial network.
+                    </p>
+                    <ul class="mt-3 space-y-1 text-sm text-zinc-300 list-disc pl-5">
+                        <li>Represents devices and links using a clear, grid-based layout.</li>
+                        <li>Shows key details for each node to support troubleshooting.</li>
+                        <li>Designed to integrate configuration files and event data later on.</li>
+                    </ul>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span class="pill">C#</span>
+                        <span class="pill">WPF</span>
+                        <span class="pill">Networking</span>
+                    </div>
+                </div>
+            </article>
+
+            <!-- PDF / automation style app -->
+            <article
+                class="group rounded-3xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 transition shadow-lg overflow-hidden">
+                <div class="p-5 flex flex-col h-full">
+                    <h3 class="text-lg font-semibold group-hover:underline underline-offset-4 decoration-zinc-500">
+                        Document parsing & automation
+                    </h3>
+                    <p class="mt-2 text-sm text-zinc-400">
+                        Scripting toolkit for turning unstructured technical PDFs into clean datasets that can be
+                        reused in other tools.
+                    </p>
+                    <ul class="mt-3 space-y-1 text-sm text-zinc-300 list-disc pl-5">
+                        <li>Splits large documents into logical sections automatically.</li>
+                        <li>Extracts key fields and tables into structured data.</li>
+                        <li>Supports repeatable workflows for future documents.</li>
+                    </ul>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span class="pill">Python</span>
+                        <span class="pill">Automation</span>
+                        <span class="pill">Data processing</span>
+                    </div>
+                </div>
+            </article>
+            <p class="mt-4 text-xs text-zinc-500">
+                *Full demos available upon request.
+            </p>
+        </div>
+    </section>
+
+
+    <!-- Experience -->
+    <section id="experience" class="mx-auto max-w-6xl px-4 py-12">
+        <h2 class="text-2xl md:text-3xl font-bold">Experience</h2>
+        <div class="mt-6 space-y-8">
+
+            <!-- Emerson – DCS Support Engineer II -->
+            <div class="relative pl-6 border-l border-zinc-800">
+                <div class="absolute -left-[7px] top-1.5 h-3 w-3 rounded-full bg-zinc-200"></div>
+                <div class="flex flex-wrap items-baseline gap-2">
+                    <h3 class="text-lg font-semibold">DCS Support Engineer II · Emerson (Power &amp; Water Solutions)
+                    </h3>
+                    <span class="text-xs text-zinc-400">Apr 2024 – Nov 2025</span>
+                </div>
+                <p class="text-sm text-zinc-400 mt-1">
+                    Advanced support for Ovation DCS customers across power generation and water treatment, combining
+                    control
+                    logic, datalinks, networks, and HMI graphics with in-house diagnostic tools.
+                </p>
+                <ul class="mt-2 text-sm text-zinc-300 list-disc pl-5">
+                    <li>Designed and developed tools like LogSentinel, ViewHMI Migration Tool, and protocol loggers.
+                    </li>
+                    <li>Mentored engineers on DCS troubleshooting, ICS protocols, and system optimization.</li>
+                    <li>Field assignments in the USA (L1-B): IPP (UT), Duke Energy (NC), SCE Bishop (CA), Crusoe (TX)
+                        and more.</li>
+                </ul>
+            </div>
+
+            <!-- Emerson – PWS Customer Support Engineer -->
+            <div class="relative pl-6 border-l border-zinc-800">
+                <div class="absolute -left-[7px] top-1.5 h-3 w-3 rounded-full bg-zinc-200"></div>
+                <div class="flex flex-wrap items-baseline gap-2">
+                    <h3 class="text-lg font-semibold">PWS Customer Support Engineer · Emerson</h3>
+                    <span class="text-xs text-zinc-400">Aug 2022 – Apr 2024</span>
+                </div>
+                <p class="text-sm text-zinc-400 mt-1">
+                    End-to-end technical expertise across control, communication, HMI graphics, historian and security
+                    layers for
+                    Ovation customers in Latin America.
+                </p>
+                <ul class="mt-2 text-sm text-zinc-300 list-disc pl-5">
+                    <li>Historian migrations, cybersecurity deployments, Modbus and OPC link commissioning.</li>
+                    <li>Loop checks, I/O validation and HMI graphics verification for large power plants.</li>
+                    <li>Assignments across Mexico, Panama, and other sites – troubleshooting both control and network
+                        layers.</li>
+                </ul>
+            </div>
+
+            <!-- Concentrix – Technical Support Specialist -->
+            <div class="relative pl-6 border-l border-zinc-800">
+                <div class="absolute -left-[7px] top-1.5 h-3 w-3 rounded-full bg-zinc-200"></div>
+                <div class="flex flex-wrap items-baseline gap-2">
+                    <h3 class="text-lg font-semibold">Technical Support Specialist (Apple) · Concentrix</h3>
+                    <span class="text-xs text-zinc-400">Jul 2020 – Aug 2022</span>
+                </div>
+                <p class="text-sm text-zinc-400 mt-1">
+                    Front-line support for macOS, iOS, iPadOS and Apple ID/App Store issues, sharpening communication
+                    and
+                    troubleshooting discipline.
+                </p>
+                <ul class="mt-2 text-sm text-zinc-300 list-disc pl-5">
+                    <li>Explained technical fixes clearly to non-technical users while maintaining Apple’s quality
+                        standards.</li>
+                    <li>Developed strong empathy, documentation practices, and pattern recognition under pressure.</li>
+                </ul>
+            </div>
+    </section>
+
+    <!-- Education -->
+    <section id="education" class="mx-auto max-w-6xl px-4 py-12">
+        <h2 class="text-2xl md:text-3xl font-bold">Education</h2>
+        <div class="mt-6 space-y-8">
+            <div class="relative pl-6 border-l border-zinc-800">
+                <div class="absolute -left-[7px] top-1.5 h-3 w-3 rounded-full bg-zinc-200"></div>
+                <div class="flex flex-wrap items-baseline gap-2">
+                    <h3 class="text-lg font-semibold">Mechanical Engineering · UACA, Costa Rica</h3>
+                    <span class="text-xs text-zinc-400">Apr 2019</span>
+                </div>
+                <p class="text-sm text-zinc-400 mt-1">
+                    Strong foundation in control, simulation and digital technologies through CAD, MATLAB and
+                    microcontroller
+                    projects – now applied to automation, data integration and control system software.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills -->
+    <section id="skills" class="mx-auto max-w-6xl px-4 py-12">
+        <h2 class="text-2xl md:text-3xl font-bold">Skills</h2>
+        <div class="mt-6 grid md:grid-cols-2 gap-6">
+
+            <div class="rounded-3xl border border-zinc-800 p-5 bg-zinc-900/40">
+                <h3 class="text-sm font-semibold">Core technologies</h3>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <span class="pill">C#</span>
+                    <span class="pill">.NET</span>
+                    <span class="pill">WPF/XAML</span>
+                    <span class="pill">Python</span>
+                    <span class="pill">JavaScript</span>
+                    <span class="pill">Node / MERN</span>
+                    <span class="pill">Lua</span>
+                </div>
+            </div>
+
+            <div class="rounded-3xl border border-zinc-800 p-5 bg-zinc-900/40">
+                <h3 class="text-sm font-semibold">ICS & protocols</h3>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <span class="pill">ICCP / MMS</span>
+                    <span class="pill">Modbus</span>
+                    <span class="pill">OPC UA/DA</span>
+                    <span class="pill">DNP3</span>
+                    <span class="pill">SNMP</span>
+                    <span class="pill">Allen Bradlley</span>
+
+                </div>
+            </div>
+
+            <div class="rounded-3xl border border-zinc-800 p-5 bg-zinc-900/40">
+                <h3 class="text-sm font-semibold">Networking & diagnostics</h3>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <span class="pill">Cisco IOS XE</span>
+                    <span class="pill">VLANs & trunking</span>
+                    <span class="pill">Packet capture</span>
+                    <span class="pill">Wireshark / Lua</span>
+                    <span class="pill">Network segmentation</span>
+                    <span class="pill">Latency & timestamps</span>
+                </div>
+            </div>
+
+            <div class="rounded-3xl border border-zinc-800 p-5 bg-zinc-900/40">
+                <h3 class="text-sm font-semibold">Data & visualization</h3>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <span class="pill">LiveChartsCore</span>
+                    <span class="pill">Chart.js</span>
+                    <span class="pill">SkiaSharp</span>
+                    <span class="pill">JSON & schema design</span>
+                    <span class="pill">Data pipelines</span>
+                </div>
+            </div>
+
+            <div class="rounded-3xl border border-zinc-800 p-5 bg-zinc-900/40 md:col-span-2">
+                <h3 class="text-sm font-semibold">Ways of working</h3>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <span class="pill">Systems thinking</span>
+                    <span class="pill">Root-cause analysis</span>
+                    <span class="pill">Simulation mindset</span>
+                    <span class="pill">Control logic analysis</span>
+                    <span class="pill">Signal verification</span>
+                    <span class="pill">Documentation discipline</span>
+                    <span class="pill">Collaboration & mentoring</span>
+                    <span class="pill">Cybersecurity awareness</span>
+                    <span class="pill">Version control & recovery</span>
+                    <span class="pill">Virtualization</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="mx-auto max-w-6xl px-4 py-12">
+        <div class="rounded-3xl border border-zinc-800 p-6 bg-gradient-to-b from-zinc-900 to-zinc-950">
+            <h2 class="text-2xl md:text-3xl font-bold">Let’s build something valuable</h2>
+            <p class="mt-2 text-sm text-zinc-300">
+                I’m open to collaborations, consulting, or full-time roles focused on DCS modernization, ICS,
+                Networking,
+                diagnostics tooling, or digital twins.
+            </p>
+            <div class="mt-4 flex flex-wrap gap-3 text-sm">
+                <a href="mailto:Jaime_br2@hotmail.com"
+                    class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 transition">
+                    Email me
+                </a>
+                <a href="https://www.linkedin.com/in/jaime-brenes-240217185" target="_blank"
+                    class="px-4 py-2 rounded-2xl border border-white/20 hover:bg-white/10 transition" rel="noreferrer">
+                    LinkedIn
+                </a>
+                <a href="https://github.com/jaime385" target="_blank"
+                    class="px-4 py-2 rounded-2xl border border-white/20 hover:bg-white/10 transition" rel="noreferrer">
+                    GitHub
+                </a>
+            </div>
+            <p class="mt-4 text-xs text-zinc-500">
+                Preferred contact: email or LinkedIn · Time zone: Central (Costa Rica).
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-zinc-800">
+        <div class="mx-auto max-w-6xl px-4 py-10 text-xs text-zinc-500">
+            © <span id="year"></span> Jaime Brenes Rojas · JBR2
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+
+    <script>
+        // Reinforce pill styling
+        document.querySelectorAll('.pill').forEach(el => {
+            el.className += ' text-[11px] px-2 py-1 rounded-full bg-white/10 border border-white/10';
+        });
+
+        // Footer year
+        const y = new Date().getFullYear();
+        const ySpan = document.getElementById('year');
+        if (ySpan) ySpan.textContent = y;
+
+        // Mobile nav toggle
+        const btn = document.getElementById('menuBtn');
+        const mobile = document.getElementById('mobileNav');
+        if (btn && mobile) {
+            btn.addEventListener('click', () => mobile.classList.toggle('hidden'));
+        }
+
+        let sketch = (p) => {
+
+            let stars = [];
+
+            p.setup = () => {
+                let container = document.getElementById("p5-holder");
+                let canvas = p.createCanvas(container.offsetWidth, 300);
+                canvas.parent("p5-holder");
+
+
+                for (let i = 0; i < 120; i++) {
+                    stars.push(new Star());
+                }
+            };
+
+
+            p.windowResized = () => {
+                const container = document.getElementById("p5-holder");
+                p.resizeCanvas(container.offsetWidth, 300);
+            };
+
+            p.draw = () => {
+                p.background(10, 10, 25);
+                for (let s of stars) {
+                    s.update();
+                    s.show();
+                }
+            };
+
+            class Star {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = p.random(p.width);
+                    this.y = p.random(p.height);
+                    this.speed = p.random(0.5, 2);
+                    this.size = p.random(1, 3);
+                }
+                update() {
+                    this.y += this.speed;
+                    if (this.y > p.height) {
+                        this.reset();
+                    }
+                }
+                show() {
+                    p.noStroke();
+                    p.fill(100, 200, 255);
+                    p.circle(this.x, this.y, this.size);
+                }
+            }
+        };
+
+        new p5(sketch);
+    </script>
+</body>
+
+</html>

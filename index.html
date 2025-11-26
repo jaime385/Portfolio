@@ -62,7 +62,7 @@
             <div class="md:col-span-3">
                 <p class="text-xs uppercase tracking-[0.2em] text-zinc-400">DCS · Ovation · ICS Networking</p>
                 <h1 class="mt-3 text-3xl md:text-5xl font-bold leading-tight">
-                    Industrial Automation Engineer building tools for real plants
+                    Industrial Automation Engineer building tools for real-world control systems troubleshooting
                 </h1>
                 <p class="mt-4 text-zinc-300 text-sm md:text-base leading-relaxed">
                     Results-oriented DCS/Industrial Automation Engineer with experience across power generation and
@@ -103,12 +103,33 @@
         </div>
     </section>
 
+
+    <!-- Lab -->
     <section id="lab" class="mx-auto max-w-6xl px-4 py-20">
-        <h2 class="text-2xl md:text-3xl font-bold mb-6">Interactive Lab</h2>
-        <p class="text-sm text-zinc-400 mb-4">Experimental visual simulations of science and engineering concepts.
-            (Coming soon!)</p>
-        <div id="p5-holder" class="w-full h-[300px] rounded-3xl overflow-hidden border border-zinc-800 shadow-lg"></div>
+        <h2 class="text-2xl md:text-3xl font-bold mb-3">Interactive Lab</h2>
+        <p class="text-sm text-zinc-400 mb-4">
+            Experimental visual simulations of science and engineering concepts –
+            starting with a <span class="font-semibold">Fourier Winding Lab</span>
+            that shows how complex exponentials build the Fourier transform.
+        </p>
+
+        <!-- Starfield preview -->
+        <div id="p5-holder" class="w-full h-[300px] rounded-3xl overflow-hidden border border-zinc-800 shadow-lg mb-4">
+        </div>
+
+        <!-- Button to open the actual tool -->
+        <div class="flex flex-wrap gap-3">
+            <a href="Tools/fourier.html" target="_blank" rel="noreferrer" class="inline-flex items-center px-4 py-2 rounded-2xl bg-white/10
+                  hover:bg-white/20 text-sm transition">
+                Open Fourier Winding Lab
+                <span class="ml-2 text-xs opacity-70">(new tab)</span>
+            </a>
+            <p class="text-xs text-zinc-500">
+                Built with p5.js · Complex plane, Euler’s formula and Fourier intuition in one place.
+            </p>
+        </div>
     </section>
+
 
     <!-- Projects -->
     <section id="projects" class="mx-auto max-w-6xl px-4 py-12">

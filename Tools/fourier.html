@@ -1156,18 +1156,23 @@
         new p5(morphSketch, 'morph-container');
 
         // ==========================================================
-        // p5 INSTANCE: Fourier Winding – Matching a Frequency
+        // p5 INSTANCE 8 : Fourier Winding – Matching a Frequency
         //   • Top: signal(t) = A·cos(2π f_sig t)
-        //   • Bottom: winding by e^{-i 2π f_test t} + average F(f_test)
+        //   • Bottom-left: winding by e^{-i 2π f_test t} + average F(f_test)
+        //   • Bottom-right: spectrum |F(f)| vs frequency, with marker at f_test
         // ==========================================================
         const fourierWindingSketch = (p) => {
             // sliders (DOM)
             let ampSlider, fSigSlider, fTestSlider;
 
             const TWO_PI = Math.PI * 2;
+            const T = 1.5; // time window in seconds
+            const N = 400; // samples
+            const F_MAX = 6; // max frequency for spectrum (Hz)
+            const F_BINS = 80; // number of frequency samples for spectrum
 
             p.setup = function () {
-                const canvas = p.createCanvas(480, 360);
+                const canvas = p.createCanvas(480, 480);
                 canvas.parent('fourier-winding-container');
 
                 // Small helper to build labeled slider rows under the canvas
@@ -1195,8 +1200,8 @@
                 }
 
                 ampSlider = makeSliderRow('Amplitude  A', 0, 1.5, 0.7, 0.01, '#00d0ff');
-                fSigSlider = makeSliderRow('Signal freq  f_sig (Hz)', 0, 6, 3.0, 0.1, '#00ffaa');
-                fTestSlider = makeSliderRow('Test freq  f_test (Hz)', 0, 6, 3.0, 0.01, '#ffd34a');
+                fSigSlider = makeSliderRow('Signal freq  f_sig (Hz)', 0, F_MAX, 3.0, 0.1, '#00ffaa');
+                fTestSlider = makeSliderRow('Test freq  f_test (Hz)', 0, F_MAX, 3.0, 0.01, '#ffd34a');
             };
 
             p.draw = function () {
@@ -1209,19 +1214,26 @@
                 // ---------- LAYOUT ----------
                 const sigLeft = 40;
                 const sigRight = p.width - 30;
-                const sigTop = 40;
-                const sigBottom = 150;
+                const sigTop = 70;
+                const sigBottom = 180;
 
                 const circleCx = p.width * 0.33;
-                const circleCy = 245;
-                const circleR = 55;
+                const circleCy = 360;
+                const circleR = 70;
+
+                // spectrum panel (bottom-right)
+                const specLeft = p.width * 0.54;
+                const specRight = p.width - 30;
+                const specTop = circleCy - circleR;
+                const specBottom = circleCy + circleR;
+                const specWidth = specRight - specLeft;
+                const specHeight = specBottom - specTop;
 
                 // ---------- TITLE & EXPLANATION ----------
                 p.noStroke();
                 p.fill(235);
                 p.textAlign(p.CENTER, p.TOP);
                 p.textSize(13);
-                p.text('Fourier Winding – Matching a Frequency', p.width / 2, 8);
 
                 p.textAlign(p.LEFT, p.TOP);
                 p.textSize(10);
@@ -1231,13 +1243,10 @@
                     '2) Spin by e^{-i 2π f_test t} and average → F(f_test)\n' +
                     '3) When f_test ≈ f_sig → |F(f_test)| is large; otherwise it cancels',
                     sigLeft,
-                    sigBottom + 10
+                    sigBottom + 16
                 );
 
                 // ---------- SIGNAL PANEL (TOP) ----------
-                const T = 1.5; // time window in seconds
-                const N = 400; // samples
-
                 // axes
                 p.stroke(80);
                 p.strokeWeight(1);
@@ -1314,7 +1323,7 @@
                 p.strokeWeight(1.6);
                 p.circle(circleCx, circleCy, circleR * 2);
 
-                // compute winding and average
+                // compute winding and average for f_test (same as before)
                 let sumRe = 0;
                 let sumIm = 0;
 
@@ -1350,7 +1359,7 @@
 
                 const avgRe = sumRe / N;
                 const avgIm = sumIm / N;
-                const magF = Math.sqrt(avgRe * avgRe + avgIm * avgIm);
+                const magF_test = Math.sqrt(avgRe * avgRe + avgIm * avgIm);
 
                 const avgX = circleCx + avgRe * scale;
                 const avgY = circleCy + avgIm * scale;
@@ -1368,17 +1377,112 @@
                 p.textAlign(p.LEFT, p.TOP);
                 p.fill(230);
                 p.textSize(11);
-                p.text('Winding at test frequency f_test', circleCx + circleR + 22, circleCy - 20);
+                p.text('Winding at test frequency f_test', circleCx + circleR - 220, circleCy - 110);
 
                 p.fill(200);
                 p.text(
                     `f_test = ${f_test.toFixed(2)} Hz\n` +
                     `Re{F(f_test)} ≈ ${avgRe.toFixed(3)}\n` +
                     `Im{F(f_test)} ≈ ${avgIm.toFixed(3)}\n` +
-                    `|F(f_test)| ≈ ${magF.toFixed(3)}`,
-                    circleCx + circleR + 22,
-                    circleCy
+                    `|F(f_test)| ≈ ${magF_test.toFixed(3)}`,
+                    circleCx + circleR - 200,
+                    circleCy - 80
                 );
+
+                // ---------- SPECTRUM CURVE: |F(f)| vs frequency ----------
+                // theoretical max magnitude for a pure cosine is ≈ A/2
+                const magMax = Math.max(A * 0.55, 0.001);
+
+                // spectrum axes box
+                p.stroke(90);
+                p.strokeWeight(1);
+                p.noFill();
+                p.rect(specLeft, specTop, specWidth, specHeight);
+
+                // axis labels
+                p.fill(200);
+                p.textAlign(p.CENTER, p.BOTTOM);
+                p.textSize(10);
+                p.text('|F(f)|', specLeft - 16, specTop); // vertical axis label-ish
+                p.textAlign(p.CENTER, p.TOP);
+                p.text('frequency (Hz)', (specLeft + specRight) / 2, specBottom + 4);
+
+                // draw 0 and f_sig markers
+                p.textAlign(p.RIGHT, p.BOTTOM);
+                p.text('0', specLeft - 4, specBottom - 10);
+
+                p.textAlign(p.CENTER, p.TOP);
+                const xSigMarker = specLeft + (f_sig / F_MAX) * specWidth;
+                p.stroke(70);
+                p.line(xSigMarker, specBottom, xSigMarker, specBottom + 4);
+                p.noStroke();
+                p.fill(140, 255, 200);
+                p.text(`f_sig`, xSigMarker, specBottom + 20);
+
+                // compute and draw spectrum curve
+                p.noFill();
+                p.stroke(255, 160, 100);
+                p.strokeWeight(1.4);
+                p.beginShape();
+
+                let yTestOnCurve = null;
+                let xTestOnCurve = null;
+
+                for (let j = 0; j < F_BINS; j++) {
+                    const f = (j / (F_BINS - 1)) * F_MAX;
+
+                    let sRe = 0;
+                    let sIm = 0;
+
+                    for (let k = 0; k < N; k++) {
+                        const tNorm = k / (N - 1);
+                        const t = T * tNorm;
+
+                        const sig = A * Math.cos(TWO_PI * f_sig * t);
+
+                        const phi = TWO_PI * f * t;
+                        const c = Math.cos(phi);
+                        const s = Math.sin(phi);
+
+                        sRe += sig * c;
+                        sIm += -sig * s;
+                    }
+
+                    const mag = Math.sqrt(sRe * sRe + sIm * sIm) / N;
+                    let magNorm = mag / magMax;
+                    magNorm = p.constrain(magNorm, 0, 1);
+
+                    const u = j / (F_BINS - 1);
+                    const x = specLeft + u * specWidth;
+                    const y = specBottom - magNorm * specHeight;
+
+                    p.vertex(x, y);
+
+                    // store point closest to f_test to mark it later
+                    if (Math.abs(f - f_test) < F_MAX / F_BINS) {
+                        xTestOnCurve = x;
+                        yTestOnCurve = y;
+                    }
+                }
+                p.endShape();
+
+                // mark f_test on spectrum
+                if (xTestOnCurve !== null) {
+                    // vertical line
+                    p.stroke(255, 210, 80, 180);
+                    p.strokeWeight(1);
+                    p.line(xTestOnCurve, specBottom, xTestOnCurve, specTop);
+
+                    // marker dot
+                    p.noStroke();
+                    p.fill(255, 210, 80);
+                    p.circle(xTestOnCurve, yTestOnCurve, 6);
+
+                    // small label
+                    p.textAlign(p.CENTER, p.BOTTOM);
+                    p.fill(255, 210, 80);
+                    p.text(`f_test`, xTestOnCurve, specTop - 2);
+                }
             };
         };
 

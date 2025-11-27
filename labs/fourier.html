@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+    <title>Fourier Visual Lab · Jaime Brenes Rojas</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background: #111;
+            color: #eee;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top bar with return button */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: #181818;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 18px;
+        }
+
+        .top-bar h1 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid #444;
+            background: #222;
+            color: #eee;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition:
+                background 0.15s ease,
+                border-color 0.15s ease,
+                transform 0.1s ease,
+                box-shadow 0.15s ease;
+        }
+
+        .back-btn:hover {
+            background: #2c2c2c;
+            border-color: #777;
+            transform: translateY(-1px);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.08);
+        }
+
+        .back-btn span {
+            font-size: 14px;
+        }
+
+        /* Page layout */
+        .page-body {
+            padding: 10px 12px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            /* 👈 this makes it fill remaining height */
+            box-sizing: border-box;
+        }
+
+        /* Optional short intro paragraph above the grid */
+        .lab-intro {
+            max-width: 960px;
+            font-size: 14px;
+            line-height: 1.45;
+            color: #ddd;
+            margin: 16px auto 4px;
+        }
+
+        /* Grid of cards with canvases */
+        .canvases {
+            display: flex;
+            gap: 20px;
+            margin: 20px auto;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1200px;
+        }
+
+        /* Individual canvas card */
+        .canvas-wrapper {
+            border: 1px solid #333;
+            padding: 10px 16px 16px;
+            background: #181818;
+            border-radius: 8px;
+            min-width: 260px;
+            max-width: 100%;
+            margin: 0 auto 20px auto;
+            text-align: center;
+            height: auto;
+            display: block;
+            box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Make canvases responsive inside their wrappers */
+        .canvas-wrapper canvas {
+            max-width: 100%;
+            height: auto;
+            /* keep aspect ratio when scaling down */
+            display: block;
+            margin: 0 auto;
+        }
+
+        .canvas-wrapper h2 {
+            margin: 4px 0 10px 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Center each p5 container content */
+        #orbit-container,
+        #complex-container,
+        #euler-container,
+        #basis-container,
+        #e-growth-container,
+        #morph-container,
+        #wave-container,
+        #fourier-winding-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ------------------ Responsive tweaks ------------------ */
+
+        /* Medium screens: slightly smaller title and padding */
+        @media (max-width: 900px) {
+            .top-bar {
+                /* keep it as a row */
+                flex-direction: row;
+                align-items: center;
+            }
+
+            .top-bar h1 {
+                font-size: 14px;
+            }
+
+            .page-body {
+                padding: 10px 10px 32px;
+            }
+
+            .canvas-wrapper {
+                min-width: 240px;
+            }
+        }
+
+        /* Small screens / phones */
+        @media (max-width: 600px) {
+            .top-bar {
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .top-bar h1 {
+                font-size: 13px;
+            }
+
+            .canvases {
+                gap: 14px;
+                margin: 16px auto;
+            }
+
+            .canvas-wrapper {
+                width: 100%;
+                max-width: 480px;
+                margin: 0 auto 16px auto;
+                padding: 8px 12px 14px;
+            }
+
+            .canvas-wrapper h2 {
+                font-size: 13px;
+            }
+
+            .lab-intro {
+                font-size: 13px;
+                padding: 0 4px;
+            }
+        }
+
+        .lab-btn {
+            margin-top: 10px;
+            font-size: 12px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid #3b3b3b;
+            background: #222;
+            color: #eee;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition:
+                background 0.15s ease,
+                border-color 0.15s ease,
+                box-shadow 0.15s ease;
+        }
+
+        /* subtle vibration / shake on hover */
+        .lab-btn:hover {
+            background: #2c2c2c;
+            border-color: #7fffd4;
+            box-shadow: 0 0 12px rgba(127, 255, 212, 0.25);
+            animation: btn-vibrate 0.22s linear infinite;
+        }
+
+        @keyframes btn-vibrate {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            20% {
+                transform: translate(-1px, -1px);
+            }
+
+            40% {
+                transform: translate(1px, -0.5px);
+            }
+
+            60% {
+                transform: translate(-1px, 0.5px);
+            }
+
+            80% {
+                transform: translate(1px, 1px);
+            }
+        }
+
+        .vibration-extra-grid {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        /* keep small canvases readable on narrow screens */
+        .vibration-extra-grid>div {
+            flex: 1 1 150px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top bar with back button -->
+    <div class="top-bar">
+        <h1>Visual Lab #1: Fourier's - e grows, π turns, i rotates, and together they produce the circle of life of
+            signals.
+        </h1>
+        <a href="../index.html" class="back-btn">
+            <span>←</span> Back to portfolio
+        </a>
+    </div>
+
+    <div class="page-body">
+
+        <p style="max-width: 900px; margin: 18px 20px 0; font-size: 14px; line-height: 1.4;">
+            This lab walks from simple circular motion to the Fourier transform.
+            Start at the top-left and move right, then down. Each panel builds on the previous one.
+        </p>
+
+        <!-- Small modules in a grid -->
+        <div class="canvases">
+
+            <div class="canvas-wrapper">
+                <h2>Orbiting Point (Circular Motion)</h2>
+                <div id="orbit-container"></div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <h2>The Birth of e – Continuous Growth</h2>
+                <div id="e-growth-container"></div>
+            </div>
+            <div class="canvas-wrapper">
+                <h2>Complex Plane</h2>
+                <div id="complex-container"></div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <h2>From Growth to Rotation – e<sup>t</sup> → e<sup>iθ</sup></h2>
+                <div id="morph-container"></div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <h2>Euler's Formula – e<sup>iθ</sup></h2>
+                <div id="euler-container"></div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <h2>Basis Rotator – e<sup>-i 2π f t</sup></h2>
+                <div id="basis-container"></div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <h2>Wave Builder – A·cos(2π f t)</h2>
+                <div id="wave-container"></div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <h2>Fourier Winding – Matching a Frequency</h2>
+                <div id="fourier-winding-container"></div>
+            </div>
+        </div>
+
+        <div class="canvas-wrapper">
+            <h2>Bearing Vibration – Case Study</h2>
+            <div id="vibration-demo-container"></div>
+
+            <button class="lab-btn" onclick="window.location.href='vibration/bearings/bearing-case-study.html'">
+                Open bearing case study →
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================================
+        // p5 INSTANCE 1: ORBITING POINT (CIRCULAR MOTION) + θ ARC
+        // ==========================================================
+        const orbitSketch = (p) => {
+            let angle = 0;
+
+            p.setup = function () {
+                const canvas = p.createCanvas(300, 300);
+                canvas.parent('orbit-container');
+            };
+
+            p.draw = function () {
+                p.background(5, 5, 20);
+
+                const cx = p.width / 2;
+                const cy = p.height / 2;
+                const r = 90;
+                const arcR = 40;
+
+                // Circle outline
+                p.noFill();
+                p.stroke(255, 220, 0);
+                p.strokeWeight(2);
+                p.circle(cx, cy, r * 2);
+
+                // Reference 0-rad line (fixed)
+                p.stroke(120);
+                p.strokeWeight(1.5);
+                p.line(cx, cy, cx + arcR, cy);
+
+                // Orbiting point (CCW: y has a minus)
+                const x = cx + r * Math.cos(angle);
+                const y = cy - r * Math.sin(angle);
+
+                // Radius line to the point
+                p.stroke(0, 200, 200);
+                p.strokeWeight(1.5);
+                p.line(cx, cy, x, y);
+
+                // Center and moving point
+                p.noStroke();
+                p.fill(255);
+                p.circle(cx, cy, 6);
+
+                p.fill(0, 255, 180);
+                p.circle(x, y, 14);
+
+                // Normalized θ in [0, 2π)
+                let theta = angle % (2 * Math.PI);
+                if (theta < 0) theta += 2 * Math.PI;
+
+                // θ arc drawn like in the Euler sketch (0 → θ)
+                p.noFill();
+                p.stroke(255, 220, 0);
+                p.strokeWeight(1.8);
+                p.beginShape();
+                const step = 0.02;
+                for (let t = 0; t <= theta; t += step) {
+                    const ax = cx + arcR * Math.cos(t);
+                    const ay = cy - arcR * Math.sin(t);
+                    p.vertex(ax, ay);
+                }
+                p.endShape();
+
+                // θ label roughly in the middle of the arc
+                const mid = theta / 2;
+                const lx = cx + arcR * 0.7 * Math.cos(mid);
+                const ly = cy - arcR * 0.7 * Math.sin(mid);
+                p.noStroke();
+                p.fill(255, 220, 0);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.text("θ", lx, ly);
+
+                // Text readout
+                p.fill(255);
+                p.textAlign(p.CENTER, p.TOP);
+                p.textSize(13);
+                p.text(`θ = ${theta.toFixed(2)} rad`, p.width / 2, 10);
+
+                p.textSize(11);
+                p.text(`Uniform circular motion`, p.width / 2, p.height - 22);
+
+                // Animate CCW
+                angle += 0.03;
+            };
+        };
+
+        new p5(orbitSketch, 'orbit-container');
+
+
+
+
+        // ==========================================================
+        // p5 INSTANCE 2: COMPLEX PLANE – IMAGINARY NUMBERS
+        // ==========================================================
+        const complexSketch = (p) => {
+            let angle = 0;
+
+            p.setup = function () {
+                const canvas = p.createCanvas(320, 320);
+                canvas.parent('complex-container');
+            };
+
+            p.draw = function () {
+                p.background(8, 8, 20);
+
+                const cx = p.width / 2;
+                const cy = p.height / 2;
+                const R = 90;
+
+                p.stroke(120);
+                p.strokeWeight(1.5);
+                p.line(20, cy, p.width - 20, cy);
+                p.line(cx, 20, cx, p.height - 20);
+
+                p.noStroke();
+                p.fill(200);
+                p.textSize(12);
+                p.textAlign(p.RIGHT, p.BOTTOM);
+                p.text("Re", p.width - 24, cy - 6);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text("Im", cx + 6, 24);
+
+                p.noFill();
+                p.stroke(80, 120, 220);
+                p.strokeWeight(2);
+                p.circle(cx, cy, R * 2);
+
+                const x = R * Math.cos(angle);
+                const y = R * Math.sin(angle);
+
+                const px = cx + x;
+                const py = cy - y;
+
+                p.strokeWeight(2);
+                p.stroke(0, 200, 255);
+                p.line(cx, cy, cx + x, cy);
+
+                p.stroke(255, 120, 0);
+                p.line(cx + x, cy, px, py);
+
+                p.stroke(0, 255, 150);
+                p.line(cx, cy, px, py);
+
+                p.noStroke();
+                p.fill(0, 255, 150);
+                p.circle(px, py, 8);
+
+                p.textSize(11);
+                p.fill(0, 200, 255);
+                p.textAlign(p.CENTER, p.TOP);
+                p.text(`cos(θ)`, cx + x / 2, cy + 4);
+
+                p.fill(255, 140, 0);
+                p.textAlign(p.LEFT, p.CENTER);
+                const midSinX = cx + x + 4;
+                const midSinY = cy - y / 2;
+                p.text(`sin(θ)`, midSinX, midSinY);
+
+                const cosVal = Math.cos(angle);
+                const sinVal = Math.sin(angle);
+                p.fill(255);
+                p.textAlign(p.LEFT, p.TOP);
+                p.textSize(12);
+                p.text(`θ: ${(angle % (2 * Math.PI)).toFixed(2)} rad`, 10, 10);
+                p.text(`cos(θ): ${cosVal.toFixed(2)}`, 10, 26);
+                p.text(`sin(θ): ${sinVal.toFixed(2)}`, 10, 42);
+                p.text(`|z| = √(cos²θ + sin²θ) = 1`, 10, 58);
+
+                p.textSize(12);
+                p.textAlign(p.CENTER, p.BOTTOM);
+                p.text(`z = (${cosVal.toFixed(2)}, ${sinVal.toFixed(2)})`, p.width / 2, p.height - 3);
+
+                angle += 0.03;
+            };
+        };
+
+        new p5(complexSketch, 'complex-container');
+
+        // ==========================================================
+        // p5 INSTANCE 3: EULER'S FORMULA – e^{iθ} + TIME PLOT
+        // ==========================================================
+        const eulerSketch = (p) => {
+            let angle = 0;
+            const bufferLength = 200;
+            let cosHistory = [];
+            let sinHistory = [];
+
+            p.setup = function () {
+                const canvas = p.createCanvas(360, 320);
+                canvas.parent('euler-container');
+            };
+
+            p.draw = function () {
+                p.background(5, 5, 18);
+
+                let normAngle = angle % (2 * Math.PI);
+                if (normAngle < 0) normAngle += 2 * Math.PI;
+
+                const cosVal = Math.cos(normAngle);
+                const sinVal = Math.sin(normAngle);
+
+                cosHistory.push(cosVal);
+                sinHistory.push(sinVal);
+                if (cosHistory.length > bufferLength) {
+                    cosHistory.shift();
+                    sinHistory.shift();
+                }
+
+                const cx = p.width / 2;
+                const cy = 110;
+                const R = 70;
+
+                // --- UNIT CIRCLE PANEL ---
+                p.stroke(90);
+                p.strokeWeight(1.2);
+                p.line(30, cy, p.width - 30, cy);
+                p.line(cx, 30, cx, 170);
+
+                p.noStroke();
+                p.fill(180);
+                p.textSize(12);
+                p.textAlign(p.RIGHT, p.BOTTOM);
+                p.text("Re", p.width - 34, cy - 6);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text("Im", cx + 6, 34);
+
+                p.noFill();
+                p.stroke(70, 110, 230);
+                p.strokeWeight(2);
+                p.circle(cx, cy, R * 2);
+
+                const x = R * cosVal;
+                const y = R * sinVal;
+                const px = cx + x;
+                const py = cy - y;
+
+                p.stroke(0, 255, 170);
+                p.strokeWeight(2);
+                p.line(cx, cy, px, py);
+
+                p.stroke(0, 200, 255);
+                p.strokeWeight(1.4);
+                p.line(cx, cy, cx + x, cy);
+                p.stroke(255, 150, 0);
+                p.line(cx + x, cy, px, py);
+
+                p.noStroke();
+                p.fill(0, 255, 170);
+                p.circle(px, py, 9);
+
+                const arcR = 30;
+                p.noFill();
+                p.stroke(200);
+                p.strokeWeight(1);
+                p.beginShape();
+                const step = 0.02;
+                for (let t = 0; t <= normAngle; t += step) {
+                    const ax = cx + arcR * Math.cos(t);
+                    const ay = cy - arcR * Math.sin(t);
+                    p.vertex(ax, ay);
+                }
+                const axEnd = cx + arcR * Math.cos(normAngle);
+                const ayEnd = cy - arcR * Math.sin(normAngle);
+                p.vertex(axEnd, ayEnd);
+                p.endShape();
+
+                p.noStroke();
+                p.fill(230);
+                p.textSize(11);
+                const mid = normAngle / 2;
+                const labelAx = cx + arcR * 0.7 * Math.cos(mid);
+                const labelAy = cy - arcR * 0.7 * Math.sin(mid);
+                p.text("θ", labelAx, labelAy);
+
+                p.fill(255);
+                p.textAlign(p.LEFT, p.TOP);
+                p.textSize(12);
+                p.text(`θ: ${normAngle.toFixed(2)} rad`, 10, 10);
+                p.text(`e^{iθ} = cos(θ) + i·sin(θ)`, 10, 26);
+                p.text(`Re = ${cosVal.toFixed(2)}, Im = ${sinVal.toFixed(2)}`, 10, 42);
+
+                // --- TIME PLOT PANEL ---
+                const plotLeft = 30;
+                const plotRight = p.width - 20;
+                const plotTop = 190;
+                const plotBottom = p.height - 30;
+                const plotMidY = (plotTop + plotBottom) / 2;
+                const plotHeight = (plotBottom - plotTop) / 2 * 0.8; // corresponds to value ±1
+
+                // axes
+                p.stroke(120);
+                p.strokeWeight(1);
+                p.line(plotLeft, plotMidY, plotRight, plotMidY); // value = 0
+                p.line(plotLeft, plotTop, plotLeft, plotBottom); // time axis
+
+                // y-axis ticks and labels: -1, 0, +1
+                p.noStroke();
+                p.fill(180);
+                p.textSize(10);
+                p.textAlign(p.RIGHT, p.CENTER);
+                p.text("0", plotLeft - 6, plotMidY);
+                p.text("+1", plotLeft - 6, plotMidY - plotHeight);
+                p.text("-1", plotLeft - 6, plotMidY + plotHeight);
+
+                // dashed lines at +1 and -1
+                p.stroke(90);
+                p.strokeWeight(0.8);
+                p.drawingContext.setLineDash([4, 4]);
+                p.line(plotLeft, plotMidY - plotHeight, plotRight, plotMidY - plotHeight);
+                p.line(plotLeft, plotMidY + plotHeight, plotRight, plotMidY + plotHeight);
+                p.drawingContext.setLineDash([]);
+
+                // axis labels
+                p.noStroke();
+                p.fill(200);
+                p.textSize(11);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text("time →", plotRight - 60, plotMidY + 4);
+                p.textAlign(p.CENTER, p.TOP);
+                //p.text("value", plotLeft + 10, plotTop - 18);
+
+                // cos history
+                if (cosHistory.length > 1) {
+                    p.noFill();
+                    p.stroke(0, 200, 255);
+                    p.strokeWeight(1.5);
+                    p.beginShape();
+                    for (let i = 0; i < cosHistory.length; i++) {
+                        const tt = i / (bufferLength - 1);
+                        const xPos = p.lerp(plotLeft, plotRight, tt);
+                        const yPos = plotMidY - cosHistory[i] * plotHeight;
+                        p.vertex(xPos, yPos);
+                    }
+                    p.endShape();
+                }
+
+                // sin history
+                if (sinHistory.length > 1) {
+                    p.noFill();
+                    p.stroke(255, 160, 0);
+                    p.strokeWeight(1.5);
+                    p.beginShape();
+                    for (let i = 0; i < sinHistory.length; i++) {
+                        const tt = i / (bufferLength - 1);
+                        const xPos = p.lerp(plotLeft, plotRight, tt);
+                        const yPos = plotMidY - sinHistory[i] * plotHeight;
+                        p.vertex(xPos, yPos);
+                    }
+                    p.endShape();
+                }
+
+                // legend + title
+                p.noStroke();
+                p.textSize(11);
+                p.fill(0, 200, 255);
+                p.textAlign(p.LEFT, p.BOTTOM);
+                p.text("cos(θ)", plotLeft + 4, plotTop - 4);
+                p.fill(255, 160, 0);
+                p.text("sin(θ)", plotLeft + 70, plotTop - 4);
+
+                p.fill(255);
+                p.textAlign(p.CENTER, p.BOTTOM);
+                p.textSize(13);
+                p.text("e^{iθ} on the unit circle + sin/cos over time", p.width / 2, p.height - 4);
+
+                angle += 0.03;
+            };
+        };
+
+
+        new p5(eulerSketch, 'euler-container');
+
+        // ==========================================================
+        // p5 INSTANCE 4: BASIS ROTATOR – e^{-i 2π f t}
+        // ==========================================================
+        const basisRotatorSketch = (p) => {
+            let t = 0;
+            let f = 3;
+            let fSlider;
+
+            p.setup = function () {
+                const canvas = p.createCanvas(360, 260);
+                canvas.parent('basis-container');
+
+                fSlider = p.createSlider(0, 20, f, 0.1);
+                fSlider.parent('basis-container');
+                fSlider.style('width', '95%');
+            };
+
+            p.draw = function () {
+                p.background(6, 6, 20);
+                f = fSlider.value();
+                t += 0.01; // "time"
+
+                const omega = 2 * Math.PI * f * t; // phase = 2π f t
+
+                const cosVal = Math.cos(omega);
+                const sinVal = Math.sin(omega);
+
+                const cx = p.width * 0.70;
+                const cy = 120;
+                const R = 65; // slightly smaller radius
+
+                // axes
+                p.stroke(100);
+                p.strokeWeight(1.2);
+                p.line(cx - 90, cy, cx + 90, cy);
+                p.line(cx, cy - 90, cx, cy + 90);
+
+                p.noStroke();
+                p.fill(190);
+                p.textSize(11);
+                p.textAlign(p.RIGHT, p.BOTTOM);
+                p.text("Re", cx + 90, cy - 4);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text("Im", cx + 4, cy - 90);
+
+                // circle
+                p.noFill();
+                p.stroke(70, 120, 230);
+                p.strokeWeight(2);
+                p.circle(cx, cy, R * 2);
+
+                // vector for e^{-i 2π f t} = cos(2π f t) - i sin(2π f t)
+                const x = R * Math.cos(omega);
+                const y = R * (-Math.sin(omega)); // minus -> -sin term
+
+                const px = cx + x;
+                const py = cy + y;
+
+                p.stroke(0, 255, 160);
+                p.strokeWeight(2);
+                p.line(cx, cy, px, py);
+
+                p.noStroke();
+                p.fill(0, 255, 160);
+                p.circle(px, py, 8);
+
+                // projections
+                p.stroke(0, 200, 255);
+                p.line(cx, cy, cx + x, cy);
+                p.stroke(255, 150, 0);
+                p.line(cx + x, cy, px, py);
+
+                // labels + text (all on the LEFT side now)
+                p.noStroke();
+                p.fill(255);
+                p.textAlign(p.LEFT, p.TOP);
+                p.textSize(11);
+                p.text(`t: ${t.toFixed(2)} s`, 10, 8);
+                p.text(`f: ${f.toFixed(2)} Hz`, 10, 22);
+                p.text(`ω = 2π f = ${(2 * Math.PI * f).toFixed(2)} rad/s`, 10, 36);
+                p.text(`phase = 2π f t = ${omega.toFixed(2)} rad`, 10, 50);
+
+                p.text(`e^{-i 2π f t} = cos(2π f t) - i·sin(2π f t)`, 10, 68);
+                p.text(`Re = cos(2π f t) ≈ ${cosVal.toFixed(2)}`, 10, 84);
+                p.text(`Im = -sin(2π f t) ≈ ${(-sinVal).toFixed(2)}`, 10, 100);
+            };
+        };
+
+        new p5(basisRotatorSketch, 'basis-container');
+
+
+        // ==========================================================
+        // p5 INSTANCE 5: WAVE BUILDER – A·cos(2π f t) and A·sin(2π f t)
+        // ==========================================================
+        const waveSketch = (p) => {
+            let A = 1.0;
+            let f = 1.0;
+            let aSlider, fSlider;
+            let phase = 0;
+
+            p.setup = function () {
+                const canvas = p.createCanvas(360, 260);
+                canvas.parent('wave-container');
+
+                aSlider = p.createSlider(0, 2, A, 0.1);
+                aSlider.parent('wave-container');
+                aSlider.style('width', '50%');
+
+                fSlider = p.createSlider(0, 5, f, 0.1);
+                fSlider.parent('wave-container');
+                fSlider.style('width', '50%');
+            };
+
+            p.draw = function () {
+                p.background(6, 6, 20);
+
+                A = aSlider.value();
+                f = fSlider.value();
+
+                // axes
+                const left = 50;
+                const right = p.width - 20;
+                const top = 40;
+                const bottom = p.height - 30;
+                const midY = (top + bottom) / 2;
+                const ampScale = (bottom - top) / 2 * 0.8;
+
+                p.stroke(120);
+                p.strokeWeight(1);
+                p.line(left, midY, right, midY); // horizontal axis (0 amplitude)
+                p.line(left, top, left, bottom); // vertical axis
+
+                // Y-axis tick labels for amplitude
+                p.noStroke();
+                p.fill(180);
+                p.textAlign(p.RIGHT, p.CENTER);
+                p.text("0", left - 6, midY);
+                p.text(`+${A.toFixed(1)}`, left - 6, midY - A * ampScale);
+                p.text(`-${A.toFixed(1)}`, left - 6, midY + A * ampScale);
+
+                // dashed grid lines for +A and –A
+                p.stroke(90);
+                p.strokeWeight(0.8);
+                p.drawingContext.setLineDash([5, 5]);
+                p.line(left, midY - A * ampScale, right, midY - A * ampScale);
+                p.line(left, midY + A * ampScale, right, midY + A * ampScale);
+                p.drawingContext.setLineDash([]);
+
+                // labels
+                p.noStroke();
+                p.fill(200);
+                p.textSize(11);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text("time →", right - 60, midY + 4);
+                p.text(`A = ${A.toFixed(2)}`, left, top - 30);
+                p.text(`f = ${f.toFixed(2)} Hz`, left + 120, top - 30);
+                p.text(`x(t) = A·cos(2π f t + φ)`, left + 10, top - 12);
+                p.text(`y(t) = A·sin(2π f t + φ)`, left + 10, top + 6);
+
+                // wave parameters
+                const duration = 1.0; // seconds shown on screen
+
+                // COS WAVE: x_cos(t) = A cos(2π f t + phase)
+                p.noFill();
+                p.stroke(0, 200, 255);
+                p.strokeWeight(1.8);
+                p.beginShape();
+                for (let x = left; x <= right; x++) {
+                    const tNorm = (x - left) / (right - left); // 0 → 1 across screen
+                    const t = tNorm * duration;
+                    const yVal = A * Math.cos(2 * Math.PI * f * t + phase);
+                    const yPix = midY - yVal * ampScale;
+                    p.vertex(x, yPix);
+                }
+                p.endShape();
+
+                // SIN WAVE: x_sin(t) = A sin(2π f t + phase)
+                p.noFill();
+                p.stroke(255, 160, 0);
+                p.strokeWeight(1.4);
+                p.beginShape();
+                for (let x = left; x <= right; x++) {
+                    const tNorm = (x - left) / (right - left); // 0 → 1 across screen
+                    const t = tNorm * duration;
+                    const yVal = A * Math.sin(2 * Math.PI * f * t + phase);
+                    const yPix = midY - yVal * ampScale;
+                    p.vertex(x, yPix);
+                }
+                p.endShape();
+
+                // tiny legend
+                p.noStroke();
+                p.textAlign(p.LEFT, p.BOTTOM);
+                p.fill(0, 200, 255);
+                p.text("cos wave", left + 10, bottom - 18);
+                p.fill(255, 160, 0);
+                p.text("sin wave", left + 90, bottom - 18);
+
+                // animated phase to make the waves feel alive
+                phase += 0.03;
+            };
+        };
+
+        new p5(waveSketch, 'wave-container');
+
+        // ==========================================================
+        // p5 INSTANCE 6: The Birth of e – Continuous Growth
+        //   • Top: y = e^x with a moving tangent + slope triangle
+        //   • Bottom: (1 + 1/n)^n → e number line
+        // ==========================================================
+        const eGrowthSketch = (p) => {
+            const trueE = Math.E; // ≈ 2.71828...
+            let nSlider;
+            let x0 = 0; // point where we show the slope
+
+            p.setup = function () {
+                const canvas = p.createCanvas(360, 260);
+                canvas.parent('e-growth-container');
+
+                // Slider for number of compounding steps n
+                nSlider = p.createSlider(1, 400, 10, 1);
+                nSlider.parent('e-growth-container');
+                nSlider.style('width', '60%');
+            };
+
+            p.draw = function () {
+                p.background(6, 6, 20);
+
+                // --------- LIMIT VIEW: (1 + 1/n)^n → e ----------
+                const n = nSlider.value();
+                const approx = Math.pow(1 + 1 / n, n);
+                const diff = approx - trueE;
+
+                // --------- TOP: y = e^x + tangent / triangle ----
+                const gLeft = 40;
+                const gRight = p.width - 25;
+                const gTop = 20;
+                const gBottom = 135;
+
+                const xMin = -1.0;
+                const xMax = 1.5;
+                const yMin = Math.exp(xMin);
+                const yMax = Math.exp(xMax);
+
+                // Title + formulas
+                p.noStroke();
+                p.fill(230);
+                p.textAlign(p.LEFT, p.TOP);
+                p.textSize(11);
+                p.text("y = e^x", gLeft, 4);
+                p.text("dy/dx = e^x", gLeft + 80, 4);
+
+                // axes + reference line at y = 1
+                p.stroke(120);
+                p.strokeWeight(1);
+
+                // reference horizontal line at y = 1  (this is where e^0 = 1)
+                const yAxisVal = 1;
+                const yAxisPix = p.map(yAxisVal, yMin, yMax, gBottom, gTop);
+                p.line(gLeft, yAxisPix, gRight, yAxisPix);
+
+                // vertical axis at x = 0
+                const xZeroPix = p.map(0, xMin, xMax, gLeft, gRight);
+                p.line(xZeroPix, gBottom, xZeroPix, gTop);
+
+                // small axis labels
+                p.noStroke();
+                p.fill(190);
+                p.textAlign(p.RIGHT, p.TOP);
+                p.text("x", gRight, yAxisPix + 2);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text("y", xZeroPix + 2, gTop);
+
+                // mark y = 1 on the vertical axis
+                p.textAlign(p.RIGHT, p.CENTER);
+                p.text("1", gLeft - 5, yAxisPix);
+
+                // curve y = e^x
+                p.noFill();
+                p.stroke(0, 200, 255);
+                p.strokeWeight(1.6);
+                p.beginShape();
+                for (let xp = gLeft; xp <= gRight; xp++) {
+                    const xv = p.map(xp, gLeft, gRight, xMin, xMax);
+                    const yv = Math.exp(xv);
+                    const yp = p.map(yv, yMin, yMax, gBottom, gTop);
+                    p.vertex(xp, yp);
+                }
+                p.endShape();
+
+                // *** HIGHLIGHT POINT (0, 1) : e^0 = 1 ***
+                const p0x = xZeroPix;
+                const p0y = yAxisPix;
+
+                // dashed guides from (0,1) to axes
+                p.stroke(120);
+                p.strokeWeight(0.8);
+                p.drawingContext.setLineDash([4, 4]);
+                // to x-axis (y reference line already is the "axis" here, so guide downwards)
+                p.line(p0x, p0y, p0x, gBottom);
+                // to y-axis leftwards
+                p.line(gLeft, p0y, p0x, p0y);
+                p.drawingContext.setLineDash([]);
+
+                // point itself
+                p.noStroke();
+                p.fill(255, 230, 0);
+                p.circle(p0x, p0y, 7);
+
+                // label e^0 = 1  (0,1)
+                p.textAlign(p.LEFT, p.BOTTOM);
+                p.fill(255, 230, 0);
+                p.text("e^0 = 1   (0, 1)", p0x + 6, p0y - 4);
+
+                // point where we show the slope
+                const y0 = Math.exp(x0);
+                const px = p.map(x0, xMin, xMax, gLeft, gRight);
+                const py = p.map(y0, yMin, yMax, gBottom, gTop);
+
+                // tangent slope m = e^x0
+                const m = y0;
+
+                // tangent line segment around x0
+                const span = 0.7; // width in x around the point
+                const xA = x0 - span / 2;
+                const xB = x0 + span / 2;
+                const yA = y0 + m * (xA - x0);
+                const yB = y0 + m * (xB - x0);
+
+                const xAp = p.map(xA, xMin, xMax, gLeft, gRight);
+                const xBp = p.map(xB, xMin, xMax, gLeft, gRight);
+                const yAp = p.map(yA, yMin, yMax, gBottom, gTop);
+                const yBp = p.map(yB, yMin, yMax, gBottom, gTop);
+
+                // draw tangent
+                p.stroke(0, 255, 160);
+                p.strokeWeight(1.4);
+                p.line(xAp, yAp, xBp, yBp);
+
+                // right triangle to visualize slope (Δy / Δx)
+                const dx = 0.4;
+                const dy = m * dx;
+                const x1 = x0;
+                const y1 = y0;
+                const x2 = x0 + dx;
+                const y2 = y0;
+                const x3 = x0 + dx;
+                const y3 = y0 + dy;
+
+                const x1p = p.map(x1, xMin, xMax, gLeft, gRight);
+                const y1p = p.map(y1, yMin, yMax, gBottom, gTop);
+                const x2p = p.map(x2, xMin, xMax, gLeft, gRight);
+                const y2p = p.map(y2, yMin, yMax, gBottom, gTop);
+                const x3p = p.map(x3, xMin, xMax, gLeft, gRight);
+                const y3p = p.map(y3, yMin, yMax, gBottom, gTop);
+
+                p.stroke(255, 200, 0);
+                p.strokeWeight(1.2);
+                p.line(x1p, y1p, x2p, y2p); // Δx
+                p.line(x2p, y2p, x3p, y3p); // Δy
+                p.line(x3p, y3p, x1p, y1p); // hypotenuse
+
+                // labels Δx, Δy, slope
+                p.noStroke();
+                p.fill(255, 200, 0);
+                p.textAlign(p.CENTER, p.TOP);
+                p.text("Δx", (x1p + x2p) / 2, y1p + 4);
+                p.textAlign(p.LEFT, p.CENTER);
+                p.text("Δy", x3p + 4, (y2p + y3p) / 2);
+
+                p.textAlign(p.LEFT, p.TOP);
+                p.text(
+                    `slope ≈ Δy/Δx = e^x ≈ ${m.toFixed(2)}`,
+                    gLeft + 42,
+                    gBottom - 75
+                );
+
+                // point on curve
+                p.fill(0, 255, 170);
+                p.noStroke();
+                p.circle(px, py, 7);
+
+                // slowly move x0 to show slope changing
+                x0 += 0.01;
+                if (x0 > xMax) x0 = xMin;
+
+                // --------- BOTTOM: number line for (1 + 1/n)^n ----------
+                const yLine = 205;
+                const left = 40;
+                const right = p.width - 25;
+                const maxVal = 3.5; // show from 0 to 3.5 on the number line
+
+                // text about compounding
+                p.noStroke();
+                p.fill(220);
+                p.textAlign(p.LEFT, p.TOP);
+                p.textSize(10);
+                p.text(`n (compounds/year): ${n}`, left, 150);
+                p.text(`(1 + 1/n)^n ≈ ${approx.toFixed(5)}`, left, 164);
+                p.text(`e ≈ ${trueE.toFixed(5)}, error ≈ ${diff.toFixed(5)}`, left, 178);
+
+                // baseline
+                p.stroke(130);
+                p.strokeWeight(1.2);
+                p.line(left, yLine, right, yLine);
+
+                const xPos = (val) => p.map(val, 0, maxVal, left, right);
+
+                // ticks at 1, 2, 3
+                p.noStroke();
+                p.fill(190);
+                p.textAlign(p.CENTER, p.TOP);
+                [1, 2, 3].forEach(v => {
+                    const x = xPos(v);
+                    p.stroke(120);
+                    p.line(x, yLine - 4, x, yLine + 4);
+                    p.noStroke();
+                    p.text(v.toString(), x, yLine + 6);
+                });
+
+                // vertical line for e
+                const eX = xPos(trueE);
+                p.stroke(255, 180, 0);
+                p.strokeWeight(2);
+                p.line(eX, yLine - 25, eX, yLine + 25);
+                p.noStroke();
+                p.fill(255, 180, 0);
+                p.textAlign(p.CENTER, p.BOTTOM);
+                p.text('e', eX, yLine - 28);
+
+                // dot for current (1 + 1/n)^n
+                const approxX = xPos(approx);
+                p.fill(0, 255, 170);
+                p.noStroke();
+                p.circle(approxX, yLine, 8);
+                p.textAlign(p.CENTER, p.TOP);
+                p.text('(1 + 1/n)^n', approxX, yLine + 10);
+
+                // caption
+                p.fill(220);
+                p.textAlign(p.CENTER, p.BOTTOM);
+                p.textSize(10);
+                p.text(
+                    'As n → ∞,  (1 + 1/n)^n → e (continuous growth)',
+                    p.width / 2,
+                    p.height - 4
+                );
+            };
+        };
+
+
+        new p5(eGrowthSketch, 'e-growth-container');
+
+        // ==========================================================
+        // p5 INSTANCE 7: EXP GROWTH → CIRCULAR ROTATION (e^t → e^{iθ})
+        // ==========================================================
+        const morphSketch = (p) => {
+            const NUM_POINTS = 220;
+            let morph = 0;
+            let morphDir = 1;
+
+            p.setup = function () {
+                const canvas = p.createCanvas(360, 260);
+                canvas.parent('morph-container');
+            };
+
+            p.draw = function () {
+                p.background(6, 6, 20);
+
+                // --- morph parameter goes back & forth between 0 and 1 ---
+                morph += morphDir * 0.005;
+                if (morph > 1) {
+                    morph = 1;
+                    morphDir = -1;
+                }
+                if (morph < 0) {
+                    morph = 0;
+                    morphDir = 1;
+                }
+
+                // --- layout ---
+                const left = 40;
+                const right = p.width - 20;
+                const top = 30;
+                const bottom = p.height - 35;
+
+                // circle center
+                const cx = p.width * 0.70;
+                const cy = (top + bottom) / 2;
+                const R = 55;
+
+                // --- axes for exponential graph (left side) ---
+                p.stroke(90);
+                p.strokeWeight(1);
+                // x-axis (t)
+                p.line(left, bottom, right - 90, bottom);
+                // y-axis (e^t)
+                p.line(left, bottom, left, top);
+
+                // tick & labels on exp graph
+                p.noStroke();
+                p.fill(190);
+                p.textSize(10);
+                p.textAlign(p.CENTER, p.TOP);
+                p.text("t", (left + right - 90) / 2, bottom + 4);
+
+                p.textAlign(p.RIGHT, p.CENTER);
+                p.text("e\u2070 = 1", left - 6, bottom);
+                p.text("e²", left - 6, top);
+
+                // helper dashed line at y = 1 for exp graph
+                p.stroke(70);
+                p.drawingContext.setLineDash([4, 4]);
+                p.line(left, bottom, right - 90, bottom);
+                p.drawingContext.setLineDash([]);
+
+                // --- axes for circle (right side) ---
+                p.stroke(80);
+                p.strokeWeight(1);
+                // horizontal (Re)
+                p.line(cx - R - 10, cy, cx + R + 10, cy);
+                // vertical (Im)
+                p.line(cx, cy - R - 10, cx, cy + R + 10);
+
+                p.noStroke();
+                p.fill(180);
+                p.textSize(11);
+                p.textAlign(p.RIGHT, p.BOTTOM);
+                p.text("Re", cx + R + 14, cy - 4);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text("Im", cx + 4, cy - R - 10);
+
+                // unit circle outline
+                p.noFill();
+                p.stroke(70, 110, 230);
+                p.strokeWeight(1.5);
+                p.circle(cx, cy, R * 2);
+
+                // --- draw the morphing curve / orbit ---
+                p.noFill();
+                p.stroke(0, 200, 255);
+                p.strokeWeight(1.8);
+                p.beginShape();
+
+                const expMin = 1;
+                const expMax = Math.exp(2); // we’ll use t in [0,2] for exp
+
+                for (let i = 0; i <= NUM_POINTS; i++) {
+                    const tNorm = i / NUM_POINTS; // 0 → 1
+                    const tExp = 2 * tNorm; // 0 → 2  (for e^t)
+                    const angle = 2 * Math.PI * tNorm; // 0 → 2π (for circle)
+
+                    // --- exponential curve on (t, e^t) plane (left) ---
+                    const expVal = Math.exp(tExp); // 1 → e²
+                    const expNorm = (expVal - expMin) / (expMax - expMin); // 0 → 1
+
+                    const xExp = p.lerp(left, right - 90, tNorm);
+                    const yExp = p.lerp(bottom, top, expNorm);
+
+                    // --- unit circle point (right) ---
+                    const xCirc = cx + R * Math.cos(angle);
+                    const yCirc = cy - R * Math.sin(angle);
+
+                    // --- interpolate between exp curve and circle ---
+                    const x = p.lerp(xExp, xCirc, morph);
+                    const y = p.lerp(yExp, yCirc, morph);
+
+                    p.vertex(x, y);
+                }
+                p.endShape();
+
+                // --- moving point along the curve/orbit ---
+                const tNormDot = (p.frameCount % NUM_POINTS) / NUM_POINTS;
+                const tExpDot = 2 * tNormDot;
+                const angleDot = 2 * Math.PI * tNormDot;
+
+                const expValDot = Math.exp(tExpDot);
+                const expNormDot = (expValDot - expMin) / (expMax - expMin);
+
+                const xExpDot = p.lerp(left, right - 90, tNormDot);
+                const yExpDot = p.lerp(bottom, top, expNormDot);
+
+                const xCircDot = cx + R * Math.cos(angleDot);
+                const yCircDot = cy - R * Math.sin(angleDot);
+
+                const xDot = p.lerp(xExpDot, xCircDot, morph);
+                const yDot = p.lerp(yExpDot, yCircDot, morph);
+
+                p.noStroke();
+                p.fill(0, 255, 180);
+                p.circle(xDot, yDot, 8);
+
+                // --- labels explaining what's happening ---
+                p.textSize(11);
+
+                // title
+                p.fill(230);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text("Morphing e^t  →  e^{iθ}", left, 6);
+
+                // morph indicator
+                p.textAlign(p.RIGHT, p.TOP);
+                p.fill(200);
+                p.text(`morph: ${morph.toFixed(2)}`, right, 6);
+
+                // fade in/out explanatory labels
+                // Left side: exponential
+                p.textAlign(p.LEFT, p.TOP);
+                p.fill(0, 200, 255, 255 * (1 - morph));
+                p.text("Real growth: e^t", left, top - 14);
+
+                // Right side: circle
+                p.textAlign(p.RIGHT, p.BOTTOM);
+                p.fill(255, 160, 0, 255 * morph);
+                p.text("Complex rotation: e^{iθ}", right, bottom);
+            };
+        };
+
+        new p5(morphSketch, 'morph-container');
+
+        // ==========================================================
+        // p5 INSTANCE 8 : Fourier Winding – Matching a Frequency
+        //   • Top: signal(t) = A·cos(2π f_sig t)
+        //   • Bottom-left: winding by e^{-i 2π f_test t} + average F(f_test)
+        //   • Bottom-right: spectrum |F(f)| vs frequency, with marker at f_test
+        // ==========================================================
+        const fourierWindingSketch = (p) => {
+            // sliders (DOM)
+            let ampSlider, fSigSlider, fTestSlider;
+
+            const TWO_PI = Math.PI * 2;
+            const T = 1.5; // time window in seconds
+            const N = 400; // samples
+            const F_MAX = 6; // max frequency for spectrum (Hz)
+            const F_BINS = 80; // number of frequency samples for spectrum
+
+            p.setup = function () {
+                const canvas = p.createCanvas(480, 480);
+                canvas.parent('fourier-winding-container');
+
+                // Small helper to build labeled slider rows under the canvas
+                function makeSliderRow(labelText, min, max, val, step, colorHex) {
+                    const row = p.createDiv();
+                    row.parent('fourier-winding-container');
+                    row.style('display', 'flex');
+                    row.style('align-items', 'center');
+                    row.style('justify-content', 'space-between');
+                    row.style('gap', '8px');
+                    row.style('margin', '4px 0');
+
+                    const label = p.createSpan(labelText);
+                    label.parent(row);
+                    label.style('font-size', '11px');
+                    label.style('color', colorHex);
+
+                    const slider = p.createSlider(min, max, val, step);
+                    slider.parent(row);
+                    slider.style('flex', '1');
+                    slider.style('width', '100%');
+                    slider.elt.style.accentColor = colorHex;
+
+                    return slider;
+                }
+
+                ampSlider = makeSliderRow('Amplitude  A', 0, 1.5, 0.7, 0.01, '#00d0ff');
+                fSigSlider = makeSliderRow('Signal freq  f_sig (Hz)', 0, F_MAX, 3.0, 0.1, '#00ffaa');
+                fTestSlider = makeSliderRow('Test freq  f_test (Hz)', 0, F_MAX, 3.0, 0.01, '#ffd34a');
+            };
+
+            p.draw = function () {
+                p.background(8, 8, 20);
+
+                const A = ampSlider.value();
+                const f_sig = fSigSlider.value();
+                const f_test = fTestSlider.value();
+
+                // ---------- LAYOUT ----------
+                const sigLeft = 40;
+                const sigRight = p.width - 30;
+                const sigTop = 70;
+                const sigBottom = 180;
+
+                const circleCx = p.width * 0.33;
+                const circleCy = 360;
+                const circleR = 70;
+
+                // spectrum panel (bottom-right)
+                const specLeft = p.width * 0.54;
+                const specRight = p.width - 30;
+                const specTop = circleCy - circleR;
+                const specBottom = circleCy + circleR;
+                const specWidth = specRight - specLeft;
+                const specHeight = specBottom - specTop;
+
+                // ---------- TITLE & EXPLANATION ----------
+                p.noStroke();
+                p.fill(235);
+                p.textAlign(p.CENTER, p.TOP);
+                p.textSize(13);
+
+                p.textAlign(p.LEFT, p.TOP);
+                p.textSize(10);
+                p.fill(200);
+                p.text(
+                    '1) Choose signal:  x(t) = A·cos(2π f_sig t)\n' +
+                    '2) Spin by e^{-i 2π f_test t} and average → F(f_test)\n' +
+                    '3) When f_test ≈ f_sig → |F(f_test)| is large; otherwise it cancels',
+                    sigLeft,
+                    sigBottom + 16
+                );
+
+                // ---------- SIGNAL PANEL (TOP) ----------
+                // axes
+                p.stroke(80);
+                p.strokeWeight(1);
+                const midY = (sigTop + sigBottom) / 2;
+                p.line(sigLeft, midY, sigRight, midY); // y = 0
+                p.line(sigLeft, sigTop, sigLeft, sigBottom); // time = 0
+
+                // y ticks (+A, -A)
+                const ampPix = (sigBottom - sigTop) * 0.38;
+                p.noStroke();
+                p.fill(170);
+                p.textAlign(p.RIGHT, p.CENTER);
+                p.text('0', sigLeft - 5, midY);
+                p.text(`+A`, sigLeft - 5, midY - ampPix);
+                p.text(`-A`, sigLeft - 5, midY + ampPix);
+
+                // dashed lines at ±A
+                p.stroke(70);
+                p.strokeWeight(0.8);
+                p.drawingContext.setLineDash([4, 4]);
+                p.line(sigLeft, midY - ampPix, sigRight, midY - ampPix);
+                p.line(sigLeft, midY + ampPix, sigRight, midY + ampPix);
+                p.drawingContext.setLineDash([]);
+
+                // time label
+                p.noStroke();
+                p.fill(200);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text('time →', sigRight - 60, midY + 4);
+
+                // draw signal
+                p.noFill();
+                p.stroke(0, 200, 255);
+                p.strokeWeight(1.8);
+
+                p.beginShape();
+                for (let k = 0; k < N; k++) {
+                    const tNorm = k / (N - 1); // 0 → 1
+                    const t = T * tNorm;
+                    const x = sigLeft + tNorm * (sigRight - sigLeft);
+                    const yVal = A * Math.cos(TWO_PI * f_sig * t);
+                    const y = midY - yVal * (ampPix / Math.max(A || 1, 1e-3)); // scale so ±A hits guide lines
+                    p.vertex(x, y);
+                }
+                p.endShape();
+
+                // top panel labels
+                p.noStroke();
+                p.fill(210);
+                p.textSize(11);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text(`A = ${A.toFixed(2)}`, sigLeft, sigTop - 24);
+                p.text(`f_sig = ${f_sig.toFixed(2)} Hz`, sigLeft + 100, sigTop - 24);
+                p.text(`x(t) = A·cos(2π f_sig t)`, sigLeft, sigTop - 8);
+
+                // ---------- WINDING PANEL (BOTTOM LEFT) ----------
+                // axes Re/Im
+                p.stroke(90);
+                p.strokeWeight(1);
+                p.line(circleCx - circleR - 15, circleCy, circleCx + circleR + 15, circleCy);
+                p.line(circleCx, circleCy - circleR - 15, circleCx, circleCy + circleR + 15);
+
+                p.noStroke();
+                p.fill(190);
+                p.textSize(11);
+                p.textAlign(p.RIGHT, p.BOTTOM);
+                p.text('Re', circleCx + circleR + 18, circleCy - 4);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text('Im', circleCx + 4, circleCy - circleR - 15);
+
+                // circle guide
+                p.noFill();
+                p.stroke(70, 120, 230);
+                p.strokeWeight(1.6);
+                p.circle(circleCx, circleCy, circleR * 2);
+
+                // compute winding and average for f_test (same as before)
+                let sumRe = 0;
+                let sumIm = 0;
+
+                p.noFill();
+                p.stroke(0, 255, 180);
+                p.strokeWeight(1.8);
+                p.beginShape();
+
+                const scale = (A === 0) ? 0 : (circleR / (A * 1.2 || 1)); // avoid div by zero
+
+                for (let k = 0; k < N; k++) {
+                    const tNorm = k / (N - 1);
+                    const t = T * tNorm;
+
+                    const sig = A * Math.cos(TWO_PI * f_sig * t);
+
+                    const phi = TWO_PI * f_test * t;
+                    const c = Math.cos(phi);
+                    const s = Math.sin(phi);
+
+                    const re = sig * c;
+                    const im = -sig * s; // minus for e^{-i 2π f_test t}
+
+                    const x = circleCx + re * scale;
+                    const y = circleCy + im * scale;
+
+                    p.vertex(x, y);
+
+                    sumRe += re;
+                    sumIm += im;
+                }
+                p.endShape();
+
+                const avgRe = sumRe / N;
+                const avgIm = sumIm / N;
+                const magF_test = Math.sqrt(avgRe * avgRe + avgIm * avgIm);
+
+                const avgX = circleCx + avgRe * scale;
+                const avgY = circleCy + avgIm * scale;
+
+                // average vector
+                p.stroke(255, 210, 80);
+                p.strokeWeight(1.6);
+                p.line(circleCx, circleCy, avgX, avgY);
+
+                p.noStroke();
+                p.fill(255, 210, 80);
+                p.circle(avgX, avgY, 7);
+
+                // winding labels
+                p.textAlign(p.LEFT, p.TOP);
+                p.fill(230);
+                p.textSize(11);
+                p.text('Winding at test frequency f_test', circleCx + circleR - 220, circleCy - 110);
+
+                p.fill(200);
+                p.text(
+                    `f_test = ${f_test.toFixed(2)} Hz\n` +
+                    `Re{F(f_test)} ≈ ${avgRe.toFixed(3)}\n` +
+                    `Im{F(f_test)} ≈ ${avgIm.toFixed(3)}\n` +
+                    `|F(f_test)| ≈ ${magF_test.toFixed(3)}`,
+                    circleCx + circleR - 200,
+                    circleCy - 80
+                );
+
+                // ---------- SPECTRUM CURVE: |F(f)| vs frequency ----------
+                // theoretical max magnitude for a pure cosine is ≈ A/2
+                const magMax = Math.max(A * 0.55, 0.001);
+
+                // spectrum axes box
+                p.stroke(90);
+                p.strokeWeight(1);
+                p.noFill();
+                p.rect(specLeft, specTop, specWidth, specHeight);
+
+                // axis labels
+                p.fill(200);
+                p.textAlign(p.CENTER, p.BOTTOM);
+                p.textSize(10);
+                p.text('|F(f)|', specLeft - 16, specTop); // vertical axis label-ish
+                p.textAlign(p.CENTER, p.TOP);
+                p.text('frequency (Hz)', (specLeft + specRight) / 2, specBottom + 4);
+
+                // draw 0 and f_sig markers
+                p.textAlign(p.RIGHT, p.BOTTOM);
+                p.text('0', specLeft - 4, specBottom - 10);
+
+                p.textAlign(p.CENTER, p.TOP);
+                const xSigMarker = specLeft + (f_sig / F_MAX) * specWidth;
+                p.stroke(70);
+                p.line(xSigMarker, specBottom, xSigMarker, specBottom + 4);
+                p.noStroke();
+                p.fill(140, 255, 200);
+                p.text(`f_sig`, xSigMarker, specBottom + 20);
+
+                // compute and draw spectrum curve
+                p.noFill();
+                p.stroke(255, 160, 100);
+                p.strokeWeight(1.4);
+                p.beginShape();
+
+                let yTestOnCurve = null;
+                let xTestOnCurve = null;
+
+                for (let j = 0; j < F_BINS; j++) {
+                    const f = (j / (F_BINS - 1)) * F_MAX;
+
+                    let sRe = 0;
+                    let sIm = 0;
+
+                    for (let k = 0; k < N; k++) {
+                        const tNorm = k / (N - 1);
+                        const t = T * tNorm;
+
+                        const sig = A * Math.cos(TWO_PI * f_sig * t);
+
+                        const phi = TWO_PI * f * t;
+                        const c = Math.cos(phi);
+                        const s = Math.sin(phi);
+
+                        sRe += sig * c;
+                        sIm += -sig * s;
+                    }
+
+                    const mag = Math.sqrt(sRe * sRe + sIm * sIm) / N;
+                    let magNorm = mag / magMax;
+                    magNorm = p.constrain(magNorm, 0, 1);
+
+                    const u = j / (F_BINS - 1);
+                    const x = specLeft + u * specWidth;
+                    const y = specBottom - magNorm * specHeight;
+
+                    p.vertex(x, y);
+
+                    // store point closest to f_test to mark it later
+                    if (Math.abs(f - f_test) < F_MAX / F_BINS) {
+                        xTestOnCurve = x;
+                        yTestOnCurve = y;
+                    }
+                }
+                p.endShape();
+
+                // mark f_test on spectrum
+                if (xTestOnCurve !== null) {
+                    // vertical line
+                    p.stroke(255, 210, 80, 180);
+                    p.strokeWeight(1);
+                    p.line(xTestOnCurve, specBottom, xTestOnCurve, specTop);
+
+                    // marker dot
+                    p.noStroke();
+                    p.fill(255, 210, 80);
+                    p.circle(xTestOnCurve, yTestOnCurve, 6);
+
+                    // small label
+                    p.textAlign(p.CENTER, p.BOTTOM);
+                    p.fill(255, 210, 80);
+                    p.text(`f_test`, xTestOnCurve, specTop - 2);
+                }
+            };
+        };
+
+        new p5(fourierWindingSketch, 'fourier-winding-container');
+
+        // ==========================================================
+        // p5 INSTANCE: VIBRATION DEMO – SHAFT + TIME SIGNAL
+        // ==========================================================
+        const vibrationDemoSketch = (p) => {
+            const N = 300; // samples for the strip
+            let t = 0;
+            let samples = new Array(N).fill(0);
+
+            p.setup = function () {
+                const canvas = p.createCanvas(360, 220);
+                canvas.parent('vibration-demo-container');
+            };
+
+            p.draw = function () {
+                p.background(5, 5, 18);
+                t += 0.02;
+
+                // parameters: slowly changing vibration
+                const fMain = 8 + 2 * Math.sin(t * 0.15); // main frequency (Hz-ish)
+                const fSide = 2; // low-frequency modulation
+                const decay = 0.03;
+
+                // update synthetic vibration samples (scrolling buffer)
+                samples.shift();
+                const newSample =
+                    Math.sin(fMain * t) * 0.7 +
+                    Math.sin(fSide * t) * 0.3 +
+                    (Math.random() - 0.5) * 0.15;
+                samples.push(newSample);
+
+                // --- shaft drawing (top) ---
+                const shaftY = 60;
+                const shaftX1 = 40;
+                const shaftX2 = p.width - 40;
+
+                // average vibration at the "bearing" position
+                const last = samples[samples.length - 1];
+                const vibOffset = last * 8; // pixel scale
+
+                // supports
+                p.noStroke();
+                p.fill(40, 40, 60);
+                p.rect(85 - 14, shaftY + 18, 28, 18, 3); // support 1
+                p.rect(220 - 14, shaftY + 18, 28, 18, 3); // support 2
+
+                // shaft
+                p.stroke(180);
+                p.strokeWeight(8);
+                p.line(
+                    shaftX1,
+                    shaftY + vibOffset,
+                    shaftX2,
+                    shaftY - vibOffset * 0.5
+                );
+
+                // small "bearing" block at left
+                p.noStroke();
+                p.fill(80, 110, 180);
+                p.rect(75, shaftY - 20, 20, 40, 3);
+
+                // little accelerometer on top
+                p.fill(0, 255, 200);
+                p.rect(82, shaftY - 28, 6, 8, 2);
+
+                // label
+                p.fill(230);
+                p.textAlign(p.LEFT, p.TOP);
+                p.textSize(11);
+                p.text("Shaft vibration", 16, 8);
+
+                // --- time signal strip (bottom) ---
+                const left = 40;
+                const right = p.width - 20;
+                const top = 120;
+                const bottom = p.height - 25;
+                const midY = (top + bottom) / 2;
+                const ampPix = (bottom - top) * 0.4;
+
+                // axes
+                p.stroke(90);
+                p.strokeWeight(1);
+                p.line(left, midY, right, midY);
+                p.line(left, top, left, bottom);
+
+                // ----- Y–AXIS LABEL -----
+                p.noStroke();
+                p.fill(170);
+                p.textSize(9);
+                p.push();
+                // move a bit left of the axis and center vertically
+                p.translate(left - 28, (top + bottom) / 2);
+                // rotate so text runs vertically
+                p.rotate(-Math.PI / 2);
+                p.textAlign(p.CENTER, p.TOP);
+                p.text("Displacement amplitude", 0, 0); // or "amplitude" if you prefer
+                p.pop();
+                // ------------------------
+
+                // numeric / x-axis labels
+                p.textAlign(p.RIGHT, p.CENTER);
+                p.text("0", left - 6, midY);
+                p.textAlign(p.LEFT, p.TOP);
+                p.text("time →", right - 50, midY + 4);
+
+                // waveform
+                p.noFill();
+                p.stroke(0, 200, 255);
+                p.strokeWeight(1.6);
+                p.beginShape();
+                let maxAbs = 0.001;
+                for (let v of samples) maxAbs = Math.max(maxAbs, Math.abs(v));
+                for (let i = 0; i < N; i++) {
+                    const v = samples[i];
+                    const x = p.lerp(left, right, i / (N - 1));
+                    const y = midY - (v / maxAbs) * ampPix;
+                    p.vertex(x, y);
+                }
+                p.endShape();
+
+                // tiny legend
+                p.noStroke();
+                p.fill(200);
+                p.textSize(10);
+                p.textAlign(p.LEFT, p.BOTTOM);
+            };
+        };
+
+        new p5(vibrationDemoSketch, 'vibration-demo-container');
+    </script>
+
+</body>
+
+</html>

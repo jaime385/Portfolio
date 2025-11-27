@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Case · Vibration on Bearings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background: #111;
+            color: #eee;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-btn {
+            font-size: 12px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid #3b3b3b;
+            background: #222;
+            color: #eee;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .nav-btn:hover {
+            background: #2c2c2c;
+            border-color: #7fffd4;
+            box-shadow: 0 0 12px rgba(127, 255, 212, 0.25);
+        }
+
+        .page-body {
+            padding: 18px 18px 48px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top Navigation -->
+    <header class="sticky top-0 z-40 backdrop-blur bg-zinc-900/75 border-b border-zinc-800">
+        <div class="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+            <h1 class="font-semibold text-sm tracking-tight">
+                Study Case: Vibration Analysis on Bearings · Fourier & FFT
+            </h1>
+
+            <div class="flex items-center gap-2">
+                <a href="../../fourier.html" class="nav-btn">← Back to Fourier's Lab</a>
+                <a href="../../../index.html" class="nav-btn">Portfolio</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content body -->
+    <div class="page-body">
+
+        <p class="text-zinc-300 text-sm leading-6 mb-6 w-full px-2">
+            This study case uses real-world vibration data from bearing failure testing to understand how
+            the Fourier Transform reveals fault signatures such as imbalance, misalignment, looseness,
+            and bearing damage. We will simulate shaft motion, visualize FFT peaks and correlate frequency
+            harmonics with physical vibration modes.
+        </p>
+
+
+
+
+
+        <!-- Placeholder for p5.js or charts -->
+        <div id="vibration-canvas-container"
+            class="w-full h-[400px] border border-zinc-700 rounded-xl bg-black/60 mb-10 flex items-center justify-center">
+            <span class="text-xs text-zinc-500">[ Coming soon ]</span>
+        </div>
+
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+    <script>
+        let samples = [];
+
+        function preload() {
+            loadJSON("../../Data/Bearing_test/1st_test/2003.10.22.12.06.24.json", (data) => {
+                samples = data.values.slice(0, 2000);
+            });
+        }
+
+        function setup() {
+            const container = document.getElementById("vibration-canvas-container");
+            const c = createCanvas(container.clientWidth, container.clientHeight);
+            c.parent("vibration-canvas-container");
+            background(0);
+        }
+
+        function draw() {
+            background(0);
+            stroke(0, 255, 180);
+            noFill();
+
+            if (samples.length === 0) return;
+
+            beginShape();
+            for (let i = 0; i < samples.length; i++) {
+                const x = map(i, 0, samples.length - 1, 0, width);
+                const y = map(samples[i], -1, 1, height, 0); // adjust scale as needed
+                vertex(x, y);
+            }
+            endShape();
+        }
+    </script>
+
+</body>
+
+</html>

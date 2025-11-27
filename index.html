@@ -39,7 +39,9 @@
             <a href="#home" class="text-xl font-semibold tracking-tight">Jaime Brenes Rojas</a>
             <nav class="hidden md:flex gap-6 text-sm">
                 <a href="#projects" class="hover:text-white">Projects</a>
+                <a href="#lab" class="hover:text-white">Lab</a>
                 <a href="#experience" class="hover:text-white">Experience</a>
+                <a href="#education" class="hover:text-white">Education</a>
                 <a href="#skills" class="hover:text-white">Skills</a>
                 <a href="#contact" class="hover:text-white">Contact</a>
             </nav>
@@ -48,10 +50,11 @@
         <nav id="mobileNav" class="md:hidden hidden border-t border-zinc-800 px-4 pb-4">
             <div class="flex flex-col gap-2 text-sm pt-2">
                 <a href="#projects" class="hover:text-white">Projects</a>
+                <a href="#lab" class="hover:text-white">Lab</a>
                 <a href="#experience" class="hover:text-white">Experience</a>
+                <a href="#education" class="hover:text-white">Education</a>
                 <a href="#skills" class="hover:text-white">Skills</a>
                 <a href="#contact" class="hover:text-white">Contact</a>
-                <a href="#resume" class="hover:text-white">Résumé</a>
             </div>
         </nav>
     </header>
@@ -103,30 +106,32 @@
         </div>
     </section>
 
-
     <!-- Lab -->
     <section id="lab" class="mx-auto max-w-6xl px-4 py-20">
-        <h2 class="text-2xl md:text-3xl font-bold mb-3">Interactive Lab</h2>
+        <h2 class="text-2xl md:text-3xl font-bold mb-3">Interactive Labs</h2>
         <p class="text-sm text-zinc-400 mb-4">
             Experimental visual simulations of science and engineering concepts –
             starting with a <span class="font-semibold">Fourier Winding Lab</span>
             that shows how complex exponentials build the Fourier transform.
         </p>
 
-        <!-- Starfield preview -->
-        <div id="p5-holder" class="w-full h-[300px] rounded-3xl overflow-hidden border border-zinc-800 shadow-lg mb-4">
-        </div>
+        <!-- Lab card: simulation + button as one entity -->
+        <div class="rounded-3xl border border-zinc-800 bg-zinc-900/40 shadow-lg overflow-hidden">
+            <!-- Starfield preview -->
+            <div id="p5-holder" class="w-full h-[125px]"></div>
 
-        <!-- Button to open the actual tool -->
-        <div class="flex flex-wrap gap-3">
-            <a href="Tools/fourier.html" target="_blank" rel="noreferrer" class="inline-flex items-center px-4 py-2 rounded-2xl bg-white/10
-                  hover:bg-white/20 text-sm transition">
-                Open Fourier Winding Lab
-                <span class="ml-2 text-xs opacity-70">(new tab)</span>
-            </a>
-            <p class="text-xs text-zinc-500">
-                Built with p5.js · Complex plane, Euler’s formula and Fourier intuition in one place.
-            </p>
+            <!-- Footer with button + caption -->
+            <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-t border-zinc-800 bg-zinc-950/70">
+                <a href="Labs/fourier.html" target="_blank" rel="noreferrer"
+                    class="inline-flex items-center px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-sm transition">
+                    Open Fourier Winding Lab
+                    <span class="ml-2 text-xs opacity-70">(new tab)</span>
+                </a>
+                <p class="text-xs text-zinc-500">
+                    Explore how complex exponentials build the Fourier transform. Includes presets, step-by-step mode,
+                    and a case study for vibration analysis.
+                </p>
+            </div>
         </div>
     </section>
 
@@ -334,6 +339,7 @@
                     <li>Developed strong empathy, documentation practices, and pattern recognition under pressure.</li>
                 </ul>
             </div>
+        </div>
     </section>
 
     <!-- Education -->
@@ -381,8 +387,7 @@
                     <span class="pill">OPC UA/DA</span>
                     <span class="pill">DNP3</span>
                     <span class="pill">SNMP</span>
-                    <span class="pill">Allen Bradlley</span>
-
+                    <span class="pill">Allen-Bradley</span>
                 </div>
             </div>
 
@@ -463,8 +468,8 @@
         </div>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
     <script>
         // Reinforce pill styling
         document.querySelectorAll('.pill').forEach(el => {
@@ -484,31 +489,42 @@
         }
 
         let sketch = (p) => {
-
             let stars = [];
+            let wave;
 
             p.setup = () => {
-                let container = document.getElementById("p5-holder");
-                let canvas = p.createCanvas(container.offsetWidth, 300);
+                const container = document.getElementById("p5-holder");
+                const h = container.offsetHeight || 150;
+                const canvas = p.createCanvas(container.offsetWidth, h);
                 canvas.parent("p5-holder");
-
 
                 for (let i = 0; i < 120; i++) {
                     stars.push(new Star());
                 }
-            };
 
+                wave = new Wave();
+            };
 
             p.windowResized = () => {
                 const container = document.getElementById("p5-holder");
-                p.resizeCanvas(container.offsetWidth, 300);
+                const h = container.offsetHeight || 200;
+                p.resizeCanvas(container.offsetWidth, h);
+                if (wave) wave.onResize();
             };
 
             p.draw = () => {
                 p.background(10, 10, 25);
+
+                // star rain
                 for (let s of stars) {
                     s.update();
                     s.show();
+                }
+
+                // single-color vibrating wave
+                if (wave) {
+                    wave.update();
+                    wave.show();
                 }
             };
 
@@ -526,6 +542,7 @@
                     this.y += this.speed;
                     if (this.y > p.height) {
                         this.reset();
+                        this.y = 0;
                     }
                 }
                 show() {
@@ -534,10 +551,81 @@
                     p.circle(this.x, this.y, this.size);
                 }
             }
+
+            class Wave {
+                constructor() {
+                    this.phase = 0;
+                    this.baseAmp = 40; // main amplitude
+                    this.vibAmp = 10; // extra vibration
+                    this.k = p.TWO_PI / 220; // spatial frequency
+                    this.step = 4; // x step between segments
+
+                    // noise settings (for realism)
+                    this.noiseAmp = 15; // how strong the noise effect is (px)
+                    this.noiseScaleX = 0.01; // noise "wavelength" along x
+                    this.noiseSpeed = 0.01; // how fast noise evolves in time
+                    this.noiseTime = 0;
+
+                    this.onResize();
+                }
+
+                onResize() {
+                    this.baseY = p.height * 0.55; // vertical center of the wave
+                }
+
+                update() {
+                    this.phase += 0.04; // wave travels & vibrates
+                    this.noiseTime += this.noiseSpeed;
+                }
+
+                show() {
+                    p.push();
+                    // default colorMode is RGB, so we don't change it here
+
+                    for (let x = 0; x < p.width; x += this.step) {
+                        const x2 = x + this.step;
+
+                        // small extra “vibration” on amplitude (deterministic)
+                        const vib1 = this.vibAmp * Math.sin(this.phase * 2 + x * 0.03);
+                        const vib2 = this.vibAmp * Math.sin(this.phase * 2 + x2 * 0.03);
+                        const amp1 = this.baseAmp + vib1;
+                        const amp2 = this.baseAmp + vib2;
+
+                        // base sinusoidal wave
+                        let y1 = this.baseY + Math.sin(this.k * x + this.phase) * amp1;
+                        let y2 = this.baseY + Math.sin(this.k * x2 + this.phase) * amp2;
+
+                        // smooth noise to make it feel more physical
+                        const n1 = p.noise(x * this.noiseScaleX, this.noiseTime);
+                        const n2 = p.noise(x2 * this.noiseScaleX, this.noiseTime);
+
+                        const noiseOffset1 = (n1 - 0.5) * 2 * this.noiseAmp;
+                        const noiseOffset2 = (n2 - 0.5) * 2 * this.noiseAmp;
+
+                        y1 += noiseOffset1;
+                        y2 += noiseOffset2;
+
+                        // same color as stars: (100, 200, 255)
+                        // Halo (thicker, softer)
+                        p.strokeWeight(6);
+                        p.stroke(100, 200, 255, 60); // low alpha for glow
+                        p.line(x, y1, x2, y2);
+
+                        // Core (thinner, bright)
+                        p.strokeWeight(3);
+                        p.stroke(100, 200, 255, 220); // strong alpha for sharp core
+                        p.line(x, y1, x2, y2);
+                    }
+
+                    p.pop();
+                }
+            }
+
         };
 
         new p5(sketch);
     </script>
+
 </body>
 
 </html>

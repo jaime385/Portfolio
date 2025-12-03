@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Complex Systems Lab · Agent Template</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+
+    <style>
+        body {
+            background: #050314;
+            color: #e5e7eb;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(10px);
+            background: radial-gradient(circle at top left, rgba(129, 140, 248, 0.3), transparent 60%),
+                rgba(9, 9, 11, 0.96);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.9);
+        }
+
+        .pill {
+            border-radius: 999px;
+            border: 1px solid rgba(161, 161, 170, 0.4);
+            padding: 0.15rem 0.7rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #a1a1aa;
+        }
+
+        .demo-card {
+            border-radius: 1.25rem;
+            border: 1px solid #27272a;
+            background: radial-gradient(circle at top, rgba(129, 140, 248, 0.12), transparent 55%),
+                rgba(15, 15, 19, 0.98);
+            box-shadow:
+                0 18px 45px rgba(0, 0, 0, 0.7),
+                0 0 24px rgba(129, 140, 248, 0.16);
+        }
+
+        #agent-holder {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            border-radius: 0.9rem;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #020617, #020617 35%, #020617);
+        }
+
+        pre {
+            background: #020617;
+            border-radius: 0.75rem;
+            padding: 0.9rem 1rem;
+            font-size: 0.75rem;
+            overflow-x: auto;
+            border: 1px solid rgba(39, 39, 42, 0.95);
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+                monospace;
+        }
+
+        .code-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #9ca3af;
+        }
+
+        .section-card {
+            border-radius: 0.9rem;
+            border: 1px solid rgba(39, 39, 42, 0.95);
+            background: radial-gradient(circle at top, rgba(15, 23, 42, 0.75), transparent 55%),
+                rgba(9, 9, 11, 0.96);
+            padding: 0.85rem 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top bar -->
+    <header class="top-bar">
+        <div class="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <a href="index.html"
+                    class="inline-flex items-center gap-1 rounded-full border border-zinc-700/80 px-3 py-1 text-xs text-zinc-200 hover:border-indigo-400/80 hover:text-indigo-200 transition">
+                    ← Back to portfolio
+                </a>
+                <div class="pill">Complex Systems Lab · Agent Template</div>
+            </div>
+            <p class="hidden sm:block text-[0.7rem] text-zinc-400">
+                “Many agents + simple rules → complex behavior.”
+            </p>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 pt-6 pb-16 space-y-8">
+        <!-- Intro -->
+        <section class="space-y-2">
+            <h1 class="text-xl md:text-2xl font-semibold tracking-tight">
+                The Agent Template: a Base Class for All Your Little Creatures
+            </h1>
+            <p class="text-sm text-zinc-400 max-w-2xl">
+                Instead of writing each simulation from scratch, we can think in terms of a generic
+                <span class="text-indigo-300 font-medium">Agent</span>:
+                a little thing with
+                <span class="text-emerald-300">state</span>,
+                an <span class="text-amber-300">update rule</span>, and a
+                <span class="text-sky-300">draw function</span>.
+                Boids, prey, spins, routers, drops, particles… all can reuse this pattern.
+            </p>
+        </section>
+
+        <!-- Live demo -->
+        <section class="demo-card p-4 space-y-3">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-sm font-semibold text-indigo-100">
+                        Demo: Generic Agents in a World
+                    </h2>
+                    <p class="text-xs text-zinc-400">
+                        80 agents, each with position + velocity. They follow the same template, but you can swap the
+                        update rule to turn them into boids, prey, routers, etc.
+                    </p>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                    <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Try this</span>
+                    <ul class="text-[0.7rem] text-zinc-400 list-disc list-inside">
+                        <li>Move the mouse: agents gently drift toward it.</li>
+                        <li>Resize window: world and agents adapt.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="agent-holder"></div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                <span>Each dot is one <span class="text-indigo-300">Agent</span> instance.</span>
+                <span>Same template → different behavior when you change <code>update()</code>.</span>
+            </div>
+        </section>
+
+        <!-- Conceptual explanation -->
+        <section class="grid gap-4 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+            <div class="space-y-3">
+                <h2 class="text-sm font-semibold text-zinc-100">
+                    1. Concept: What is an “Agent” in Code?
+                </h2>
+                <div class="section-card space-y-1.5 text-sm text-zinc-300">
+                    <p>
+                        An <strong>agent</strong> is just a small object with:
+                    </p>
+                    <ul class="list-disc list-inside text-[0.85rem] space-y-0.5">
+                        <li><strong>State</strong> – where it is, what it’s doing (position, velocity, opinion, health,
+                            load...).</li>
+                        <li><strong>Update rule</strong> – how it changes over time (physics, flocking, infection,
+                            consensus...).</li>
+                        <li><strong>Draw function</strong> – how we visualize it (dot, arrow, icon, node...).</li>
+                    </ul>
+                    <p>
+                        A <strong>world</strong> is just “a container of agents” that calls
+                        <code>update()</code> and <code>draw()</code> on all of them each frame.
+                    </p>
+                    <p class="text-xs text-zinc-500 mt-1">
+                        Mentally: think <strong>“for each agent: read neighbors / inputs → update state →
+                            draw”</strong>.
+                    </p>
+                </div>
+
+                <h2 class="text-sm font-semibold text-zinc-100">
+                    2. Minimal Base Class
+                </h2>
+                <p class="text-xs text-zinc-400">
+                    This is a light, reusable template you can copy into any unit and specialize.
+                </p>
+
+                <div class="space-y-1">
+                    <div class="code-label">Agent.js · Core template</div>
+                    <pre><code>// A generic agent in 2D space
+class Agent {
+    constructor(world, x, y) {
+        this.world = world;     // reference to the world (for neighbors, bounds, etc.)
+        this.pos = p5.Vector.random2D()
+            .mult(0)            // start at (0,0) then set below
+        this.pos.set(x, y);
+        this.vel = p5.Vector.random2D().mult(1.0);
+        this.maxSpeed = 2.0;
+        this.size = 5;
+    }
+
+    // &lt;-- This is where each model's "physics / rules" live
+    update() {
+        // Example behaviour: drift + gentle pull toward mouse
+        let target = this.world.getTarget();
+        if (target) {
+            let desired = p5.Vector.sub(target, this.pos);
+            desired.setMag(0.05);
+            this.vel.add(desired);
+        }
+
+        this.vel.limit(this.maxSpeed);
+        this.pos.add(this.vel);
+        this.world.wrap(this); // or bounce(this), or clamp(this)...
+    }
+
+    // &lt;-- This is purely visualization
+    draw(p) {
+        p.noStroke();
+        p.fill(129, 140, 248, 220);
+        p.ellipse(this.pos.x, this.pos.y, this.size, this.size);
+    }
+}
+
+// A world that owns agents and steps them
+class World {
+    constructor(p, count) {
+        this.p = p;
+        this.agents = [];
+        for (let i = 0; i &lt; count; i++) {
+            const x = p.random(p.width);
+            const y = p.random(p.height);
+            this.agents.push(new Agent(this, x, y));
+        }
+    }
+
+    getTarget() {
+        // e.g. mouse position as an attractor
+        return this.p.createVector(this.p.mouseX, this.p.mouseY);
+    }
+
+    wrap(agent) {
+        // Toroidal world: agents leaving one side re-enter from the other
+        if (agent.pos.x &lt; 0) agent.pos.x += this.p.width;
+        if (agent.pos.x &gt; this.p.width) agent.pos.x -= this.p.width;
+        if (agent.pos.y &lt; 0) agent.pos.y += this.p.height;
+        if (agent.pos.y &gt; this.p.height) agent.pos.y -= this.p.height;
+    }
+
+    step() {
+        for (let a of this.agents) {
+            a.update();
+        }
+    }
+
+    draw() {
+        for (let a of this.agents) {
+            a.draw(this.p);
+        }
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <!-- How to specialize it -->
+            <div class="space-y-3">
+                <h2 class="text-sm font-semibold text-zinc-100">
+                    3. How to Turn This Into Boids, Prey, Routers, Spins…
+                </h2>
+
+                <div class="section-card text-[0.85rem] text-zinc-300 space-y-1.5">
+                    <p class="font-semibold text-zinc-100">Step 1 – Add the state you care about</p>
+                    <p>
+                        Inside <code>constructor</code> you might add:
+                    </p>
+                    <ul class="list-disc list-inside space-y-0.5">
+                        <li><code>this.health</code>, <code>this.infected</code> for SIR.</li>
+                        <li><code>this.spin</code> = +1 or −1 for Ising.</li>
+                        <li><code>this.load</code>, <code>this.capacity</code> for cascading failures.</li>
+                        <li><code>this.opinion</code> ∈ [0,1] for consensus.</li>
+                    </ul>
+                </div>
+
+                <div class="section-card text-[0.85rem] text-zinc-300 space-y-1.5">
+                    <p class="font-semibold text-zinc-100">Step 2 – Rewrite <code>update()</code> using those variables
+                    </p>
+                    <p>
+                        This is the only place you really change the “physics” of the agent:
+                    </p>
+                    <ul class="list-disc list-inside space-y-0.5">
+                        <li>For boids: compute separation / alignment / cohesion forces.</li>
+                        <li>For prey: if predator nearby, add “run away” velocity.</li>
+                        <li>For routers: if overloaded, reroute or mark as failed.</li>
+                        <li>For spins: flip with probability based on ΔE (Ising).</li>
+                    </ul>
+                    <p>
+                        Everything else (world stepping, drawing loop, etc.) stays the same.
+                    </p>
+                </div>
+
+                <div class="section-card text-[0.85rem] text-zinc-300 space-y-1.5">
+                    <p class="font-semibold text-zinc-100">Step 3 – Optional: subclass Agent</p>
+                    <p>In bigger labs you can create variants:</p>
+                    <pre><code>class Boid extends Agent {
+    constructor(world, x, y) {
+        super(world, x, y);
+        this.maxSpeed = 3.0;
+        this.size = 6;
+    }
+
+    update() {
+        // compute flocking forces here...
+        // this.vel.add(separationForce).add(cohesionForce).add(alignmentForce);
+        this.vel.limit(this.maxSpeed);
+        this.pos.add(this.vel);
+        this.world.wrap(this);
+    }
+
+    draw(p) {
+        // draw a triangle instead of a dot
+    }
+}</code></pre>
+                    <p class="text-xs text-zinc-500">
+                        Same world, different agents: you can mix <code>Boid</code>, <code>Predator</code>,
+                        <code>Obstacle</code> agents in one simulation.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- p5 integration explanation -->
+        <section class="space-y-2">
+            <h2 class="text-sm font-semibold text-zinc-100">
+                4. p5.js Integration: Where Does the Agent World Plug In?
+            </h2>
+            <p class="text-xs text-zinc-400">
+                This is how the template connects to p5’s <code>setup()</code> / <code>draw()</code> in this page:
+            </p>
+            <pre><code>&lt;script&gt;
+(function() {
+    const sketch = (p) =&gt; {
+        let holder, canvas;
+        let world;
+
+        p.setup = () =&gt; {
+            holder = document.getElementById("agent-holder");
+            const rect = holder.getBoundingClientRect();
+            canvas = p.createCanvas(rect.width, rect.height);
+            canvas.parent(holder);
+            p.frameRate(30);
+            world = new World(p, 80);  // 80 agents
+        };
+
+        p.windowResized = () =&gt; {
+            if (!holder) return;
+            const rect = holder.getBoundingClientRect();
+            p.resizeCanvas(rect.width, rect.height);
+            // Optionally: rebuild the world or rescale agents
+        };
+
+        p.draw = () =&gt; {
+            p.background(5, 10, 24);
+            world.step();      // 1) update all agents
+            world.draw();      // 2) draw all agents
+        };
+    };
+
+    new p5(sketch);
+})();
+&lt;/script&gt;</code></pre>
+            <p class="text-xs text-zinc-400">
+                Any unit that uses p5 can follow the same pattern:
+                <strong>create a World → fill it with Agents → call <code>step()</code> and <code>draw()</code> every
+                    frame.</strong>
+            </p>
+        </section>
+    </main>
+
+    <!-- Live demo script: uses the Agent/World template -->
+    <script>
+        (function () {
+            const sketch = (p) => {
+                let holder, canvas;
+                let world;
+
+                class Agent {
+                    constructor(world, x, y) {
+                        this.world = world;
+                        this.pos = p.createVector(x, y);
+                        this.vel = p5.Vector.random2D().mult(1.2);
+                        this.maxSpeed = 2.0;
+                        this.size = 5;
+                    }
+
+                    update() {
+                        // Gentle pull towards mouse if inside canvas
+                        const target = this.world.getTarget();
+                        if (target) {
+                            const desired = p5.Vector.sub(target, this.pos);
+                            const dist = desired.mag();
+                            if (dist > 5) {
+                                desired.setMag(0.08);
+                                this.vel.add(desired);
+                            }
+                        } else {
+                            // small random walk when no target
+                            this.vel.add(p5.Vector.random2D().mult(0.05));
+                        }
+
+                        this.vel.limit(this.maxSpeed);
+                        this.pos.add(this.vel);
+                        this.world.wrap(this);
+                    }
+
+                    draw(p) {
+                        // color a bit based on speed
+                        const speed = this.vel.mag();
+                        const t = p.constrain(p.map(speed, 0, this.maxSpeed, 0, 1), 0, 1);
+                        const col = p.lerpColor(
+                            p.color(129, 140, 248),
+                            p.color(45, 212, 191),
+                            t
+                        );
+                        p.noStroke();
+                        p.fill(col);
+                        p.ellipse(this.pos.x, this.pos.y, this.size, this.size);
+                    }
+                }
+
+                class World {
+                    constructor(p, count) {
+                        this.p = p;
+                        this.agents = [];
+                        for (let i = 0; i < count; i++) {
+                            const x = p.random(p.width);
+                            const y = p.random(p.height);
+                            this.agents.push(new Agent(this, x, y));
+                        }
+                    }
+
+                    getTarget() {
+                        if (this.p.mouseX < 0 || this.p.mouseX > this.p.width ||
+                            this.p.mouseY < 0 || this.p.mouseY > this.p.height) {
+                            return null;
+                        }
+                        return this.p.createVector(this.p.mouseX, this.p.mouseY);
+                    }
+
+                    wrap(agent) {
+                        if (agent.pos.x < 0) agent.pos.x += this.p.width;
+                        if (agent.pos.x > this.p.width) agent.pos.x -= this.p.width;
+                        if (agent.pos.y < 0) agent.pos.y += this.p.height;
+                        if (agent.pos.y > this.p.height) agent.pos.y -= this.p.height;
+                    }
+
+                    step() {
+                        for (let a of this.agents) {
+                            a.update();
+                        }
+                    }
+
+                    draw() {
+                        for (let a of this.agents) {
+                            a.draw(this.p);
+                        }
+
+                        // subtle HUD
+                        this.p.noStroke();
+                        this.p.fill(15, 23, 42, 220);
+                        this.p.rect(0, 0, 240, 36);
+                        this.p.fill(224, 231, 255);
+                        this.p.textAlign(this.p.LEFT, this.p.TOP);
+                        this.p.textSize(10);
+                        this.p.text("Agent template demo", 8, 6);
+                        this.p.fill(148, 163, 184);
+                        this.p.textSize(9);
+                        this.p.text(`agents: ${this.agents.length}`, 8, 20);
+                    }
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("agent-holder");
+                    const rect = holder.getBoundingClientRect();
+                    canvas = p.createCanvas(rect.width, rect.height);
+                    canvas.parent(holder);
+                    p.frameRate(30);
+                    world = new World(p, 80);
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    p.background(3, 7, 19);
+                    world.step();
+                    world.draw();
+                };
+            };
+
+            new p5(sketch);
+        })();
+    </script>
+</body>
+
+</html>

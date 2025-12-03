@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Complex Systems Lab · Boids & Friends</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background: #050509;
+            color: #f4f4f5;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(10px);
+            background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.15), transparent),
+                rgba(9, 9, 11, 0.95);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.9);
+        }
+
+        .sketch-card {
+            border-radius: 1.25rem;
+            border: 1px solid #27272a;
+            background: radial-gradient(circle at top, rgba(34, 197, 94, 0.08), transparent 55%),
+                rgba(15, 15, 19, 0.98);
+            box-shadow:
+                0 18px 45px rgba(0, 0, 0, 0.7),
+                0 0 24px rgba(34, 197, 94, 0.16);
+        }
+
+        .sketch-holder {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            border-radius: 0.9rem;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #020617, #020617 35%, #09090b);
+        }
+
+        .pill {
+            border-radius: 999px;
+            border: 1px solid rgba(161, 161, 170, 0.4);
+            padding: 0.15rem 0.6rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #a1a1aa;
+        }
+
+        .badge-live {
+            border-radius: 999px;
+            padding: 0.2rem 0.65rem;
+            font-size: 0.7rem;
+            background: rgba(34, 197, 94, 0.18);
+            color: #bbf7d0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .badge-live span {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
+        }
+
+        /* Sidebar + toggle */
+        .sidebar-toggle {
+            position: fixed;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            z-index: 40;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(74, 222, 128, 0.6);
+            background: radial-gradient(circle at 30% 20%, rgba(74, 222, 128, 0.35), transparent),
+                rgba(15, 23, 42, 0.96);
+            box-shadow:
+                0 0 18px rgba(34, 197, 94, 0.7),
+                0 0 40px rgba(34, 197, 94, 0.35);
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .sidebar-toggle span {
+            display: block;
+            font-size: 1.35rem;
+            line-height: 1;
+            color: #bbf7d0;
+        }
+
+        .sidebar-toggle:hover {
+            transform: translateY(-1px) scale(1.03);
+            box-shadow:
+                0 0 22px rgba(34, 197, 94, 0.9),
+                0 0 55px rgba(34, 197, 94, 0.45);
+        }
+
+        .info-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: min(420px, 100%);
+            background: radial-gradient(circle at top, rgba(52, 211, 153, 0.14), transparent 55%),
+                #020617;
+            border-left: 1px solid rgba(34, 197, 94, 0.35);
+            box-shadow: -18px 0 40px rgba(0, 0, 0, 0.8);
+            z-index: 50;
+            transform: translateX(100%);
+            transition: transform 0.25s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-sidebar-header {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid rgba(39, 39, 42, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            background: rgba(2, 6, 23, 0.96);
+        }
+
+        .info-sidebar-body {
+            padding: 0.75rem 1.2rem 1.2rem;
+            overflow-y: auto;
+            font-size: 0.78rem;
+        }
+
+        .info-section {
+            border-radius: 0.85rem;
+            padding: 0.65rem 0.75rem 0.8rem;
+            margin-bottom: 0.75rem;
+            background: rgba(12, 10, 26, 0.96);
+            border: 1px solid rgba(39, 39, 42, 0.85);
+        }
+
+        .info-section h3 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0 0 0.25rem;
+        }
+
+        .info-section p {
+            margin: 0.1rem 0;
+        }
+
+        .info-section code {
+            font-size: 0.7rem;
+            padding: 0.12rem 0.25rem;
+            border-radius: 0.25rem;
+            background: rgba(24, 24, 27, 0.9);
+        }
+
+        .info-section ul {
+            margin: 0.25rem 0 0.3rem 0.95rem;
+            padding: 0;
+        }
+
+        .info-section li {
+            margin-bottom: 0.15rem;
+        }
+
+        .info-chip {
+            font-size: 0.65rem;
+            border-radius: 999px;
+            padding: 0.1rem 0.45rem;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+            color: #e5e7eb;
+        }
+
+        .info-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(34, 197, 94, 0.05), transparent 60%),
+                rgba(2, 6, 23, 0.88);
+            z-index: 45;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-out;
+        }
+
+        body.sidebar-open .info-sidebar {
+            transform: translateX(0);
+        }
+
+        body.sidebar-open .info-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top bar -->
+    <header class="top-bar">
+        <div class="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <a href="ComplexSystemsHub.html"
+                    class="inline-flex items-center gap-1 rounded-full border border-zinc-700/80 px-3 py-1 text-xs text-zinc-200 hover:border-emerald-400/80 hover:text-emerald-200 transition">
+                    ← Back to Complex Systems Hub
+                </a>
+                <div class="pill">Complex Systems Lab</div>
+            </div>
+            <div class="badge-live">
+                <span></span>
+                live simulations
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 pt-6 pb-16 space-y-8">
+        <!-- Intro -->
+        <section class="space-y-2">
+            <h1 class="text-xl md:text-2xl font-semibold tracking-tight">
+                Boids, Grids & Emergent Behavior
+            </h1>
+            <p class="text-sm text-zinc-400 max-w-2xl">
+                Each block below hosts a different complex-systems simulation:
+                <span class="text-emerald-300">Boids</span> (flocking),
+                a <span class="text-sky-300">Cellular Automaton</span> (Game of Life),
+                a <span class="text-rose-300">Predator–Prey field</span>,
+                and <span class="text-indigo-300">Reaction–Diffusion</span> Turing patterns.
+            </p>
+        </section>
+
+        <!-- Grid of topics -->
+        <section class="grid gap-6 md:grid-cols-2">
+            <!-- Boids block -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-emerald-200">
+                            Boids · Flocking Simulation
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Local rules → global flock: alignment, cohesion, separation.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Parameters</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">~120 agents</span>
+                            <span class="pill">mouse repulsion</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="boids-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Move the mouse to disturb the flock. 🐦</span>
+                    <span>Rules: align + cohere + separate</span>
+                </div>
+            </article>
+
+            <!-- Cellular Automaton: Game of Life -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-sky-200">
+                            Cellular Automaton · Game of Life
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Binary cells on a grid. Simple rules; surprising patterns.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Controls</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">Click: draw</span>
+                            <span class="pill">Space: pause</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ca-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Click / drag to add life. ✨</span>
+                    <span>Classic Conway rules: birth & death by neighbors.</span>
+                </div>
+            </article>
+
+            <!-- Predator–Prey Field -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-rose-200">
+                            Predator–Prey Field · Lotka–Volterra
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Rabbits wander & reproduce. Foxes hunt, eat, reproduce, and starve.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Dynamics</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">agents in space</span>
+                            <span class="pill">energy-based</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pp-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Just watch. 🦊🐇</span>
+                    <span>Foxes chase, rabbits flee & repopulate.</span>
+                </div>
+            </article>
+
+            <!-- Reaction–Diffusion / Turing Patterns -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-indigo-200">
+                            Reaction–Diffusion · Turing Patterns
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Two chemicals diffusing & reacting → spots, stripes, organic patterns.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Model</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">Gray–Scott</span>
+                            <span class="pill">click to perturb</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="rd-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Click to drop “chemical B” and watch new patterns grow. 🌊</span>
+                    <span>Spots & stripes emerge from local diffusion + reaction.</span>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <!-- Overlay & Sidebar toggle -->
+    <div id="info-overlay" class="info-overlay"></div>
+
+    <button id="info-toggle" class="sidebar-toggle" aria-label="Open system explanations">
+        <span>+</span>
+    </button>
+
+    <!-- Info Sidebar -->
+    <aside id="info-sidebar" class="info-sidebar" aria-label="Simulation explanations">
+        <div class="info-sidebar-header">
+            <div class="flex flex-col">
+                <span class="text-xs font-semibold text-emerald-300 tracking-wide uppercase">
+                    System guide
+                </span>
+                <span class="text-[0.72rem] text-zinc-400">
+                    What each canvas is showing · rules · equations · real-world links
+                </span>
+            </div>
+            <button id="info-close"
+                class="inline-flex items-center justify-center rounded-full border border-zinc-700/70 text-xs text-zinc-200 w-7 h-7 hover:border-emerald-400/70 hover:text-emerald-200 transition"
+                aria-label="Close">
+                ✕
+            </button>
+        </div>
+        <div class="info-sidebar-body">
+            <!-- Boids -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-emerald-300">Boids · Flocking</h3>
+                    <span class="info-chip">local rules → global swarm</span>
+                </div>
+                <p><strong>Idea:</strong> Each “bird” only reacts to nearby neighbors, yet the whole group flies as a
+                    coordinated flock.</p>
+                <p class="mt-1 text-zinc-300">
+                    For each boid we compute three steering forces:
+                </p>
+                <ul class="text-zinc-300">
+                    <li><strong>Alignment:</strong> match the average direction of neighbors.</li>
+                    <li><strong>Cohesion:</strong> move toward the average position of neighbors.</li>
+                    <li><strong>Separation:</strong> steer away if neighbors are too close.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    In vector form (simplified):
+                </p>
+                <p class="text-zinc-200">
+                    <code>v<sub>new</sub> = v + w<sub>a</sub>·F<sub>align</sub> + w<sub>c</sub>·F<sub>cohere</sub> +
+                        w<sub>s</sub>·F<sub>separate</sub></code>
+                </p>
+                <p class="mt-1 text-zinc-300">
+                    Where each <code>F</code> is a vector built from neighbors within a perception radius.
+                </p>
+                <p class="mt-1 text-zinc-300">
+                    <strong>Real-world applications:</strong>
+                </p>
+                <ul class="text-zinc-300">
+                    <li>Designing swarm robots or drones that coordinate without a central controller.</li>
+                    <li>Traffic and crowd simulations (how groups self-organize and jam).</li>
+                    <li>Graphics / games: believable movement of fish schools, bird flocks, crowds.</li>
+                </ul>
+            </section>
+
+            <!-- Game of Life -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-sky-300">Cellular Automaton · Game of Life</h3>
+                    <span class="info-chip">binary grid · simple update rule</span>
+                </div>
+                <p><strong>Idea:</strong> Each cell is either alive (1) or dead (0) on a grid. The next state depends
+                    only on the 8 neighbors.</p>
+                <p class="mt-1 text-zinc-300"><strong>Conway’s rules (per step):</strong></p>
+                <ul class="text-zinc-300">
+                    <li>If a cell is <strong>alive</strong> and has <strong>&lt; 2</strong> neighbors → it dies
+                        (underpopulation).</li>
+                    <li>If alive and has <strong>2 or 3</strong> neighbors → it stays alive.</li>
+                    <li>If alive and has <strong>&gt; 3</strong> neighbors → it dies (overcrowding).</li>
+                    <li>If a cell is <strong>dead</strong> and has <strong>exactly 3</strong> neighbors → it becomes
+                        alive (birth).</li>
+                </ul>
+                <p class="text-zinc-300">
+                    In compact form, for cell state <code>s ∈ {0,1}</code> with neighbor count <code>n</code>:
+                </p>
+                <p class="text-zinc-200">
+                    <code>s' = 1</code> if <code>(s = 1 and n ∈ {2,3})</code> or <code>(s = 0 and n = 3)</code>, else
+                    <code>0</code>.
+                </p>
+                <p class="mt-1 text-zinc-300">
+                    <strong>Real-world applications / intuition:</strong>
+                </p>
+                <ul class="text-zinc-300">
+                    <li>Studying how simple local rules can create persistent “organisms” and moving patterns.</li>
+                    <li>Conceptual model for growth, self-repair, and self-replication.</li>
+                    <li>Inspiration for distributed algorithms and pattern formation in materials and biology.</li>
+                </ul>
+            </section>
+
+            <!-- Predator–Prey -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-rose-300">Predator–Prey · Lotka–Volterra</h3>
+                    <span class="info-chip">population cycles · ecosystems</span>
+                </div>
+                <p><strong>Idea:</strong> Two interacting populations: prey (e.g. rabbits) and predators (e.g. foxes).
+                    Predators eat prey, and both populations change over time.</p>
+                <p class="mt-1 text-zinc-300"><strong>Classical Lotka–Volterra equations:</strong></p>
+                <p class="text-zinc-200">
+                    Let <code>R(t)</code> = prey, <code>F(t)</code> = predators.
+                </p>
+                <p class="text-zinc-200">
+                    <code>dR/dt = αR − βRF</code><br />
+                    <code>dF/dt = δRF − γF</code>
+                </p>
+                <ul class="text-zinc-300">
+                    <li><code>α</code> – natural prey growth rate.</li>
+                    <li><code>β</code> – how strongly predators remove prey.</li>
+                    <li><code>γ</code> – predator death rate without food.</li>
+                    <li><code>δ</code> – how efficiently eaten prey turns into new predators.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    Our canvas uses <strong>agents in space</strong> with an energy model instead of continuous
+                    equations, but the qualitative behavior (cycles, booms & crashes) is similar.
+                </p>
+                <p class="mt-1 text-zinc-300">
+                    <strong>Real-world applications:</strong>
+                </p>
+                <ul class="text-zinc-300">
+                    <li>Ecology: modeling predator–prey cycles, invasive species, or pest control.</li>
+                    <li>Cyber / networks: attackers vs defenders, malware vs patches as predator–prey dynamics.</li>
+                    <li>Industrial systems: load vs capacity (e.g. tasks vs worker threads / resources).</li>
+                </ul>
+            </section>
+
+            <!-- Reaction–Diffusion -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-indigo-300">Reaction–Diffusion · Gray–Scott</h3>
+                    <span class="info-chip">Turing patterns · morphogenesis</span>
+                </div>
+                <p><strong>Idea:</strong> Two chemical concentrations, <code>A(x,y,t)</code> and <code>B(x,y,t)</code>,
+                    spread out (diffuse) and react with each other. The balance of “spread” vs “reaction” creates stable
+                    spots and stripes.</p>
+                <p class="mt-1 text-zinc-300"><strong>Gray–Scott model:</strong></p>
+                <p class="text-zinc-200">
+                    <code>∂A/∂t = d<sub>A</sub>∇²A − A·B² + f·(1 − A)</code><br />
+                    <code>∂B/∂t = d<sub>B</sub>∇²B + A·B² − (k + f)·B</code>
+                </p>
+                <ul class="text-zinc-300">
+                    <li><code>∇²</code> – Laplacian, measuring how much a point differs from its neighbors (diffusion).
+                    </li>
+                    <li><code>A·B²</code> – nonlinear reaction term where A is consumed to create B.</li>
+                    <li><code>f</code> – feed rate (how much A is added from outside).</li>
+                    <li><code>k</code> – kill rate (how much B is removed).</li>
+                </ul>
+                <p class="text-zinc-300">
+                    On the canvas we discretize space into a grid and numerically update A and B each frame.
+                    Clicking injects more B in a small region, creating new patterns that spread.
+                </p>
+                <p class="mt-1 text-zinc-300">
+                    <strong>Real-world applications / intuition:</strong>
+                </p>
+                <ul class="text-zinc-300">
+                    <li>Pattern formation in nature: animal coat patterns, seashell markings, chemical fronts.</li>
+                    <li>Material science: modeling how patterns emerge in reactions on surfaces.</li>
+                    <li>Graphics: generative textures for organic, “alive” surfaces.</li>
+                </ul>
+            </section>
+
+            <section class="info-section">
+                <h3 class="text-zinc-200 mb-1">How this connects to engineering & control</h3>
+                <p class="text-zinc-300">
+                    All four systems show the same big lesson: <strong>local rules + feedback</strong> can produce
+                    complex global behavior. That’s exactly what happens in:
+                </p>
+                <ul class="text-zinc-300">
+                    <li>Industrial networks: devices + routing rules → emergent traffic patterns.</li>
+                    <li>Vibration / rotating machinery: local defects → global frequency patterns in spectra.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    By learning to simulate and read these patterns, you get better at designing
+                    <strong>control, monitoring, and visualization tools</strong> for real plants and networks.
+                </p>
+            </section>
+        </div>
+    </aside>
+
+    <!-- Boids p5.js sketch (instance mode) -->
+    <script>
+        (function () {
+            const boidsSketch = (p) => {
+                const MAX_SPEED = 2.2;
+                const MAX_FORCE = 0.05;
+                const PERCEPTION_RADIUS = 45;
+                const SEPARATION_RADIUS = 22;
+
+                let boids = [];
+                let canvas;
+                let holderElement;
+
+                class Boid {
+                    constructor(x, y) {
+                        this.position = p.createVector(x, y);
+                        const angle = p.random(p.TWO_PI);
+                        this.velocity = p5.Vector.fromAngle(angle);
+                        this.velocity.mult(p.random(1, MAX_SPEED));
+                        this.acceleration = p.createVector(0, 0);
+                    }
+
+                    edges() {
+                        if (this.position.x > p.width) this.position.x = 0;
+                        else if (this.position.x < 0) this.position.x = p.width;
+
+                        if (this.position.y > p.height) this.position.y = 0;
+                        else if (this.position.y < 0) this.position.y = p.height;
+                    }
+
+                    align(boids) {
+                        let steering = p.createVector(0, 0);
+                        let total = 0;
+                        for (let other of boids) {
+                            const d = p.dist(
+                                this.position.x,
+                                this.position.y,
+                                other.position.x,
+                                other.position.y
+                            );
+                            if (other !== this && d < PERCEPTION_RADIUS) {
+                                steering.add(other.velocity);
+                                total++;
+                            }
+                        }
+                        if (total > 0) {
+                            steering.div(total);
+                            steering.setMag(MAX_SPEED);
+                            steering.sub(this.velocity);
+                            steering.limit(MAX_FORCE);
+                        }
+                        return steering;
+                    }
+
+                    cohesion(boids) {
+                        let steering = p.createVector(0, 0);
+                        let total = 0;
+                        for (let other of boids) {
+                            const d = p.dist(
+                                this.position.x,
+                                this.position.y,
+                                other.position.x,
+                                other.position.y
+                            );
+                            if (other !== this && d < PERCEPTION_RADIUS) {
+                                steering.add(other.position);
+                                total++;
+                            }
+                        }
+                        if (total > 0) {
+                            steering.div(total);
+                            steering.sub(this.position);
+                            steering.setMag(MAX_SPEED);
+                            steering.sub(this.velocity);
+                            steering.limit(MAX_FORCE * 0.8);
+                        }
+                        return steering;
+                    }
+
+                    separation(boids) {
+                        let steering = p.createVector(0, 0);
+                        let total = 0;
+                        for (let other of boids) {
+                            const d = p.dist(
+                                this.position.x,
+                                this.position.y,
+                                other.position.x,
+                                other.position.y
+                            );
+                            if (other !== this && d < SEPARATION_RADIUS) {
+                                let diff = p5.Vector.sub(this.position, other.position);
+                                diff.div(d * d + 0.0001);
+                                steering.add(diff);
+                                total++;
+                            }
+                        }
+                        if (total > 0) {
+                            steering.div(total);
+                            steering.setMag(MAX_SPEED);
+                            steering.sub(this.velocity);
+                            steering.limit(MAX_FORCE * 1.4);
+                        }
+                        return steering;
+                    }
+
+                    mouseRepel() {
+                        if (p.mouseX < 0 || p.mouseX > p.width || p.mouseY < 0 || p.mouseY > p.height) {
+                            return p.createVector(0, 0);
+                        }
+                        const mousePos = p.createVector(p.mouseX, p.mouseY);
+                        const d = p.dist(this.position.x, this.position.y, mousePos.x, mousePos.y);
+                        if (d > 70) return p.createVector(0, 0);
+                        const force = p5.Vector.sub(this.position, mousePos);
+                        force.setMag((70 - d) * 0.02);
+                        return force;
+                    }
+
+                    flock(boids) {
+                        const alignment = this.align(boids).mult(1.0);
+                        const cohesion = this.cohesion(boids).mult(0.9);
+                        const separation = this.separation(boids).mult(1.6);
+                        const mouse = this.mouseRepel().mult(1.3);
+
+                        this.acceleration.set(0, 0);
+                        this.acceleration.add(alignment);
+                        this.acceleration.add(cohesion);
+                        this.acceleration.add(separation);
+                        this.acceleration.add(mouse);
+                    }
+
+                    update() {
+                        this.velocity.add(this.acceleration);
+                        this.velocity.limit(MAX_SPEED);
+                        this.position.add(this.velocity);
+                        this.acceleration.mult(0);
+                    }
+
+                    show() {
+                        const theta = this.velocity.heading() + p.radians(90);
+                        const size = 7;
+
+                        p.push();
+                        p.translate(this.position.x, this.position.y);
+                        p.rotate(theta);
+
+                        const speedNorm = this.velocity.mag() / MAX_SPEED;
+                        const glow = p.lerpColor(
+                            p.color(59, 130, 246),
+                            p.color(34, 197, 94),
+                            speedNorm
+                        );
+
+                        p.stroke(glow);
+                        p.strokeWeight(1.2);
+                        p.fill(10, 10, 18, 140);
+                        p.beginShape();
+                        p.vertex(0, -size);
+                        p.vertex(-size * 0.7, size);
+                        p.vertex(0, size * 0.4);
+                        p.vertex(size * 0.7, size);
+                        p.endShape(p.CLOSE);
+                        p.pop();
+                    }
+                }
+
+                function initBoids(count) {
+                    boids = [];
+                    for (let i = 0; i < count; i++) {
+                        boids.push(new Boid(p.random(p.width), p.random(p.height)));
+                    }
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holderElement) return;
+                    const rect = holderElement.getBoundingClientRect();
+                    const w = Math.max(240, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                }
+
+                p.setup = () => {
+                    holderElement = document.getElementById("boids-holder");
+                    const rect = holderElement.getBoundingClientRect();
+                    const w = Math.max(240, rect.width);
+                    const h = rect.height || 260;
+
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holderElement);
+
+                    p.frameRate(60);
+                    initBoids(120);
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    p.background(3, 6, 20, 220);
+
+                    for (let boid of boids) {
+                        boid.edges();
+                        boid.flock(boids);
+                        boid.update();
+                        boid.show();
+                    }
+
+                    const g = p.drawingContext.createLinearGradient(0, 0, 0, p.height);
+                    g.addColorStop(0, "rgba(15,23,42,0.8)");
+                    g.addColorStop(1, "rgba(15,23,42,0)");
+                    p.drawingContext.fillStyle = g;
+                    p.noStroke();
+                    p.rect(0, 0, p.width, p.height);
+                };
+            };
+
+            new p5(boidsSketch);
+        })();
+    </script>
+
+    <!-- Cellular Automaton: Game of Life (instance mode) -->
+    <script>
+        (function () {
+            const caSketch = (p) => {
+                let canvas;
+                let holderElement;
+                let cols, rows;
+                let cellSize = 10;
+                let grid;
+                let nextGrid;
+                let running = true;
+
+                function makeGrid() {
+                    cols = Math.floor(p.width / cellSize);
+                    rows = Math.floor(p.height / cellSize);
+                    grid = new Array(cols);
+                    nextGrid = new Array(cols);
+                    for (let x = 0; x < cols; x++) {
+                        grid[x] = new Array(rows);
+                        nextGrid[x] = new Array(rows);
+                        for (let y = 0; y < rows; y++) {
+                            grid[x][y] = p.random() < 0.18 ? 1 : 0;
+                            nextGrid[x][y] = 0;
+                        }
+                    }
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holderElement) return;
+                    const rect = holderElement.getBoundingClientRect();
+                    const w = Math.max(240, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    makeGrid();
+                }
+
+                function countNeighbors(x, y) {
+                    let sum = 0;
+                    for (let dx = -1; dx <= 1; dx++) {
+                        for (let dy = -1; dy <= 1; dy++) {
+                            if (dx === 0 && dy === 0) continue;
+                            const col = (x + dx + cols) % cols;
+                            const row = (y + dy + rows) % rows;
+                            sum += grid[col][row];
+                        }
+                    }
+                    return sum;
+                }
+
+                function step() {
+                    for (let x = 0; x < cols; x++) {
+                        for (let y = 0; y < rows; y++) {
+                            const state = grid[x][y];
+                            const neighbors = countNeighbors(x, y);
+
+                            if (state === 0 && neighbors === 3) {
+                                nextGrid[x][y] = 1;
+                            } else if (state === 1 && (neighbors < 2 || neighbors > 3)) {
+                                nextGrid[x][y] = 0;
+                            } else {
+                                nextGrid[x][y] = state;
+                            }
+                        }
+                    }
+
+                    const temp = grid;
+                    grid = nextGrid;
+                    nextGrid = temp;
+                }
+
+                function drawGrid() {
+                    p.background(3, 6, 20);
+
+                    p.stroke(20, 30, 60);
+                    p.strokeWeight(0.4);
+                    for (let x = 0; x <= cols; x++) {
+                        p.line(x * cellSize, 0, x * cellSize, rows * cellSize);
+                    }
+                    for (let y = 0; y <= rows; y++) {
+                        p.line(0, y * cellSize, cols * cellSize, y * cellSize);
+                    }
+
+                    for (let x = 0; x < cols; x++) {
+                        for (let y = 0; y < rows; y++) {
+                            if (grid[x][y] === 1) {
+                                const life = 180 + (x * 3 + y * 5) % 40;
+                                p.noStroke();
+                                p.fill(56, 189, 248, life);
+                                p.rect(x * cellSize, y * cellSize, cellSize, cellSize);
+
+                                p.fill(8, 47, 73, 200);
+                                p.rect(x * cellSize + 2, y * cellSize + 2, cellSize - 4, cellSize - 4);
+                            }
+                        }
+                    }
+
+                    p.noStroke();
+                    p.fill(15, 23, 42, 200);
+                    p.rect(0, 0, 200, 32);
+
+                    p.fill(148, 163, 184);
+                    p.textSize(10);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.text(
+                        `Game of Life · ${running ? "running" : "paused"}`,
+                        8,
+                        10
+                    );
+
+                    p.fill(148, 163, 184);
+                    p.textSize(9);
+                    p.text(
+                        "Click/drag: toggle cells · Space: pause",
+                        8,
+                        22
+                    );
+                }
+
+                function handleMouseDraw() {
+                    if (!p.mouseIsPressed) return;
+                    if (p.mouseX < 0 || p.mouseX >= p.width || p.mouseY < 0 || p.mouseY >= p.height) return;
+
+                    const x = Math.floor(p.mouseX / cellSize);
+                    const y = Math.floor(p.mouseY / cellSize);
+                    if (x >= 0 && x < cols && y >= 0 && y < rows) {
+                        grid[x][y] = 1;
+                    }
+                }
+
+                p.setup = () => {
+                    holderElement = document.getElementById("ca-holder");
+                    const rect = holderElement.getBoundingClientRect();
+                    const w = Math.max(240, rect.width);
+                    const h = rect.height || 260;
+
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holderElement);
+                    p.frameRate(30);
+
+                    makeGrid();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    if (running && p.frameCount % 3 === 0) {
+                        step();
+                    }
+                    handleMouseDraw();
+                    drawGrid();
+                };
+
+                p.keyPressed = () => {
+                    if (p.key === ' ') {
+                        running = !running;
+                    }
+                };
+            };
+
+            new p5(caSketch);
+        })();
+    </script>
+
+    <!-- Predator–Prey field (instance mode) -->
+    <script>
+        (function () {
+            const ppSketch = (p) => {
+                let canvas;
+                let holderElement;
+
+                const MAX_PREY = 90;
+                const MAX_PREDATORS = 40;
+
+                const PREY_SPEED = 1.4;
+                const PREDATOR_SPEED = 2.0;
+
+                const PREDATOR_PERCEPTION = 90;
+                const EAT_RADIUS = 10;
+
+                const ENERGY_DECAY = 0.08;
+                const ENERGY_GAIN = 3.0;
+                const REPRODUCTION_THRESHOLD = 6.0;
+
+                let prey = [];
+                let predators = [];
+
+                class Prey {
+                    constructor(x, y) {
+                        this.position = p.createVector(x, y);
+                        const angle = p.random(p.TWO_PI);
+                        this.velocity = p5.Vector.fromAngle(angle);
+                        this.velocity.setMag(PREY_SPEED);
+                        this.acceleration = p.createVector(0, 0);
+                    }
+
+                    edges() {
+                        if (this.position.x > p.width) this.position.x = 0;
+                        else if (this.position.x < 0) this.position.x = p.width;
+
+                        if (this.position.y > p.height) this.position.y = 0;
+                        else if (this.position.y < 0) this.position.y = p.height;
+                    }
+
+                    wander() {
+                        const jitter = p5.Vector.random2D();
+                        jitter.mult(0.05);
+                        this.acceleration.add(jitter);
+                    }
+
+                    update() {
+                        this.wander();
+                        this.velocity.add(this.acceleration);
+                        this.velocity.limit(PREY_SPEED);
+                        this.position.add(this.velocity);
+                        this.acceleration.mult(0);
+                        this.edges();
+                    }
+
+                    show() {
+                        p.push();
+                        p.translate(this.position.x, this.position.y);
+                        p.noStroke();
+                        p.fill(34, 197, 94, 220);
+                        p.ellipse(0, 0, 5, 5);
+                        p.pop();
+                    }
+                }
+
+                class Predator {
+                    constructor(x, y, energy = 4.0) {
+                        this.position = p.createVector(x, y);
+                        const angle = p.random(p.TWO_PI);
+                        this.velocity = p5.Vector.fromAngle(angle);
+                        this.velocity.setMag(PREDATOR_SPEED * 0.6);
+                        this.acceleration = p.createVector(0, 0);
+                        this.energy = energy;
+                    }
+
+                    edges() {
+                        if (this.position.x > p.width) this.position.x = 0;
+                        else if (this.position.x < 0) this.position.x = p.width;
+
+                        if (this.position.y > p.height) this.position.y = 0;
+                        else if (this.position.y < 0) this.position.y = p.height;
+                    }
+
+                    chase(preyList) {
+                        let closest = null;
+                        let minDist = Infinity;
+
+                        for (let i = 0; i < preyList.length; i++) {
+                            const d = p5.Vector.dist(this.position, preyList[i].position);
+                            if (d < PREDATOR_PERCEPTION && d < minDist) {
+                                minDist = d;
+                                closest = preyList[i];
+                            }
+                        }
+
+                        if (closest) {
+                            const desired = p5.Vector.sub(closest.position, this.position);
+                            desired.setMag(PREDATOR_SPEED);
+                            const steer = p5.Vector.sub(desired, this.velocity);
+                            steer.limit(0.15);
+                            this.acceleration.add(steer);
+                        } else {
+                            const jitter = p5.Vector.random2D();
+                            jitter.mult(0.06);
+                            this.acceleration.add(jitter);
+                        }
+                    }
+
+                    eat(preyList) {
+                        for (let i = preyList.length - 1; i >= 0; i--) {
+                            const d = p5.Vector.dist(this.position, preyList[i].position);
+                            if (d < EAT_RADIUS) {
+                                preyList.splice(i, 1);
+                                this.energy += ENERGY_GAIN;
+                            }
+                        }
+                    }
+
+                    update(preyList) {
+                        this.energy -= ENERGY_DECAY;
+
+                        this.chase(preyList);
+                        this.velocity.add(this.acceleration);
+                        this.velocity.limit(PREDATOR_SPEED);
+                        this.position.add(this.velocity);
+                        this.acceleration.mult(0);
+                        this.edges();
+
+                        this.eat(preyList);
+                    }
+
+                    canReproduce() {
+                        return this.energy > REPRODUCTION_THRESHOLD;
+                    }
+
+                    reproduce(predatorsList) {
+                        if (!this.canReproduce()) return;
+                        if (predatorsList.length >= MAX_PREDATORS) return;
+
+                        this.energy *= 0.5;
+                        const offset = p5.Vector.random2D().mult(8);
+                        const childPos = p5.Vector.add(this.position, offset);
+                        predatorsList.push(new Predator(childPos.x, childPos.y, this.energy));
+                    }
+
+                    isDead() {
+                        return this.energy <= 0;
+                    }
+
+                    show() {
+                        const heading = this.velocity.heading() + p.radians(90);
+                        const size = 9;
+
+                        const eNorm = p.constrain(this.energy / REPRODUCTION_THRESHOLD, 0, 1);
+                        const col = p.lerpColor(
+                            p.color(248, 113, 113),
+                            p.color(220, 38, 38),
+                            eNorm
+                        );
+
+                        p.push();
+                        p.translate(this.position.x, this.position.y);
+                        p.rotate(heading);
+
+                        p.stroke(col);
+                        p.strokeWeight(1.3);
+                        p.fill(24, 8, 8, 210);
+
+                        p.beginShape();
+                        p.vertex(0, -size);
+                        p.vertex(-size * 0.6, size);
+                        p.vertex(0, size * 0.2);
+                        p.vertex(size * 0.6, size);
+                        p.endShape(p.CLOSE);
+
+                        p.pop();
+                    }
+                }
+
+                function seedPopulation() {
+                    prey = [];
+                    predators = [];
+                    const area = p.width * p.height;
+                    const densityFactor = area / (400 * 260);
+
+                    const initialPrey = Math.floor(60 * densityFactor);
+                    const initialPredators = Math.floor(18 * densityFactor);
+
+                    for (let i = 0; i < initialPrey; i++) {
+                        prey.push(new Prey(p.random(p.width), p.random(p.height)));
+                    }
+                    for (let i = 0; i < initialPredators; i++) {
+                        predators.push(new Predator(p.random(p.width), p.random(p.height)));
+                    }
+                }
+
+                function maybeSpawnPrey() {
+                    if (prey.length < MAX_PREY && p.random() < 0.03) {
+                        prey.push(new Prey(p.random(p.width), p.random(p.height)));
+                    }
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holderElement) return;
+                    const rect = holderElement.getBoundingClientRect();
+                    const w = Math.max(240, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    seedPopulation();
+                }
+
+                p.setup = () => {
+                    holderElement = document.getElementById("pp-holder");
+                    const rect = holderElement.getBoundingClientRect();
+                    const w = Math.max(240, rect.width);
+                    const h = rect.height || 260;
+
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holderElement);
+                    p.frameRate(45);
+
+                    seedPopulation();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    p.background(10, 10, 18);
+
+                    p.noStroke();
+                    const bgGrad = p.drawingContext.createLinearGradient(0, 0, p.width, p.height);
+                    bgGrad.addColorStop(0, "rgba(24,16,48,0.7)");
+                    bgGrad.addColorStop(1, "rgba(12,10,24,0.9)");
+                    p.drawingContext.fillStyle = bgGrad;
+                    p.rect(0, 0, p.width, p.height);
+
+                    for (let i = prey.length - 1; i >= 0; i--) {
+                        prey[i].update();
+                    }
+
+                    for (let i = predators.length - 1; i >= 0; i--) {
+                        const pred = predators[i];
+                        pred.update(prey);
+                        pred.reproduce(predators);
+                        if (pred.isDead()) {
+                            predators.splice(i, 1);
+                        }
+                    }
+
+                    maybeSpawnPrey();
+
+                    for (let r of prey) r.show();
+                    for (let f of predators) f.show();
+
+                    p.noStroke();
+                    p.fill(15, 23, 42, 215);
+                    p.rect(0, 0, 210, 40);
+
+                    p.fill(248, 250, 252);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text(`Predator–Prey field`, 8, 6);
+
+                    p.fill(148, 163, 184);
+                    p.textSize(9);
+                    p.text(
+                        `Rabbits: ${prey.length}   Foxes: ${predators.length}`,
+                        8,
+                        20
+                    );
+                };
+            };
+
+            new p5(ppSketch);
+        })();
+    </script>
+
+    <!-- Reaction–Diffusion / Turing patterns (instance mode) -->
+    <script>
+        (function () {
+            const rdSketch = (p) => {
+                let canvas;
+                let holderElement;
+
+                let cols, rows;
+                let cellSize = 3;
+
+                let A, B;
+                let nextA, nextB;
+
+                const dA = 1.0;
+                const dB = 0.5;
+                const feed = 0.055;
+                const kill = 0.062;
+                const dt = 1.0;
+
+                function makeGrids() {
+                    cols = Math.floor(p.width / cellSize);
+                    rows = Math.floor(p.height / cellSize);
+
+                    A = new Array(cols);
+                    B = new Array(cols);
+                    nextA = new Array(cols);
+                    nextB = new Array(cols);
+
+                    for (let x = 0; x < cols; x++) {
+                        A[x] = new Array(rows);
+                        B[x] = new Array(rows);
+                        nextA[x] = new Array(rows);
+                        nextB[x] = new Array(rows);
+                        for (let y = 0; y < rows; y++) {
+                            A[x][y] = 1.0;
+                            B[x][y] = 0.0;
+                            nextA[x][y] = 1.0;
+                            nextB[x][y] = 0.0;
+                        }
+                    }
+
+                    const cx = Math.floor(cols / 2);
+                    const cy = Math.floor(rows / 2);
+                    const radius = Math.floor(Math.min(cols, rows) / 8);
+                    for (let x = cx - radius; x < cx + radius; x++) {
+                        for (let y = cy - radius; y < cy + radius; y++) {
+                            if (x > 0 && x < cols && y > 0 && y < rows) {
+                                A[x][y] = 0.5;
+                                B[x][y] = 0.25 + 0.25 * p.random();
+                            }
+                        }
+                    }
+                }
+
+                function laplace(grid, x, y) {
+                    let sum = 0;
+                    sum += grid[x][y] * -1;
+                    sum += grid[(x + 1 + cols) % cols][y] * 0.2;
+                    sum += grid[(x - 1 + cols) % cols][y] * 0.2;
+                    sum += grid[x][(y + 1 + rows) % rows] * 0.2;
+                    sum += grid[x][(y - 1 + rows) % rows] * 0.2;
+                    sum += grid[(x + 1 + cols) % cols][(y + 1 + rows) % rows] * 0.05;
+                    sum += grid[(x - 1 + cols) % cols][(y + 1 + rows) % rows] * 0.05;
+                    sum += grid[(x + 1 + cols) % cols][(y - 1 + rows) % rows] * 0.05;
+                    sum += grid[(x - 1 + cols) % cols][(y - 1 + rows) % rows] * 0.05;
+                    return sum;
+                }
+
+                function step() {
+                    for (let x = 1; x < cols - 1; x++) {
+                        for (let y = 1; y < rows - 1; y++) {
+                            const a = A[x][y];
+                            const b = B[x][y];
+
+                            const lapA = laplace(A, x, y);
+                            const lapB = laplace(B, x, y);
+
+                            const reaction = a * b * b;
+
+                            const newA = a + (dA * lapA - reaction + feed * (1 - a)) * dt;
+                            const newB = b + (dB * lapB + reaction - (kill + feed) * b) * dt;
+
+                            nextA[x][y] = p.constrain(newA, 0, 1);
+                            nextB[x][y] = p.constrain(newB, 0, 1);
+                        }
+                    }
+
+                    const tempA = A;
+                    A = nextA;
+                    nextA = tempA;
+
+                    const tempB = B;
+                    B = nextB;
+                    nextB = tempB;
+                }
+
+                function drawField() {
+                    const g = p.drawingContext.createLinearGradient(0, 0, p.width, p.height);
+                    g.addColorStop(0, "rgba(15,23,42,1)");
+                    g.addColorStop(1, "rgba(6,12,30,1)");
+                    p.drawingContext.fillStyle = g;
+                    p.noStroke();
+                    p.rect(0, 0, p.width, p.height);
+
+                    for (let x = 0; x < cols; x++) {
+                        for (let y = 0; y < rows; y++) {
+                            const b = B[x][y];
+                            const n = p.constrain(b * 1.8, 0, 1);
+
+                            const r = p.lerp(30, 129, n);
+                            const gCol = p.lerp(64, 178, n);
+                            const bCol = p.lerp(112, 255, n);
+
+                            p.fill(r, gCol, bCol, 255);
+                            p.rect(x * cellSize, y * cellSize, cellSize, cellSize);
+                        }
+                    }
+
+                    p.noStroke();
+                    p.fill(15, 23, 42, 215);
+                    p.rect(0, 0, 230, 40);
+
+                    p.fill(224, 231, 255);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text(`Reaction–Diffusion · Gray–Scott`, 8, 6);
+
+                    p.fill(165, 180, 252);
+                    p.textSize(9);
+                    p.text(`Click/drag: add B · watch spots & stripes emerge`, 8, 20);
+                }
+
+                function handleMouseDraw() {
+                    if (!p.mouseIsPressed) return;
+                    if (p.mouseX < 0 || p.mouseX >= p.width || p.mouseY < 0 || p.mouseY >= p.height) return;
+
+                    const gx = Math.floor(p.mouseX / cellSize);
+                    const gy = Math.floor(p.mouseY / cellSize);
+
+                    const radius = 4;
+                    for (let x = gx - radius; x <= gx + radius; x++) {
+                        for (let y = gy - radius; y <= gy + radius; y++) {
+                            if (x > 0 && x < cols && y > 0 && y < rows) {
+                                A[x][y] = 0.2;
+                                B[x][y] = 0.9;
+                            }
+                        }
+                    }
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holderElement) return;
+                    const rect = holderElement.getBoundingClientRect();
+                    const w = Math.max(240, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    makeGrids();
+                }
+
+                p.setup = () => {
+                    holderElement = document.getElementById("rd-holder");
+                    const rect = holderElement.getBoundingClientRect();
+                    const w = Math.max(240, rect.width);
+                    const h = rect.height || 260;
+
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holderElement);
+                    p.frameRate(30);
+
+                    makeGrids();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    for (let i = 0; i < 2; i++) {
+                        step();
+                    }
+                    handleMouseDraw();
+                    drawField();
+                };
+            };
+
+            new p5(rdSketch);
+        })();
+    </script>
+
+    <!-- Sidebar JS -->
+    <script>
+        (function () {
+            const body = document.body;
+            const toggleBtn = document.getElementById('info-toggle');
+            const closeBtn = document.getElementById('info-close');
+            const overlay = document.getElementById('info-overlay');
+
+            function toggleSidebar(force) {
+                const shouldOpen = typeof force === 'boolean' ? force : !body.classList.contains('sidebar-open');
+                if (shouldOpen) {
+                    body.classList.add('sidebar-open');
+                } else {
+                    body.classList.remove('sidebar-open');
+                }
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => toggleSidebar());
+            }
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => toggleSidebar(false));
+            }
+            if (overlay) {
+                overlay.addEventListener('click', () => toggleSidebar(false));
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    toggleSidebar(false);
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>

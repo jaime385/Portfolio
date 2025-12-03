@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Complex Systems Lab · Unit 4 · Networks & Spreading</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background: #050314;
+            color: #f4f4f5;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(10px);
+            background: radial-gradient(circle at top left, rgba(129, 140, 248, 0.2), transparent),
+                rgba(9, 9, 11, 0.96);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.9);
+        }
+
+        .sketch-card {
+            border-radius: 1.25rem;
+            border: 1px solid #27272a;
+            background: radial-gradient(circle at top, rgba(129, 140, 248, 0.12), transparent 55%),
+                rgba(15, 15, 19, 0.98);
+            box-shadow:
+                0 18px 45px rgba(0, 0, 0, 0.7),
+                0 0 24px rgba(129, 140, 248, 0.16);
+        }
+
+        .sketch-holder {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            border-radius: 0.9rem;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #020617, #020617 35%, #020617);
+        }
+
+        .pill {
+            border-radius: 999px;
+            border: 1px solid rgba(161, 161, 170, 0.4);
+            padding: 0.15rem 0.6rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #a1a1aa;
+        }
+
+        .badge-live {
+            border-radius: 999px;
+            padding: 0.2rem 0.65rem;
+            font-size: 0.7rem;
+            background: rgba(129, 140, 248, 0.22);
+            color: #e0e7ff;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .badge-live span {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #818cf8;
+            box-shadow: 0 0 8px rgba(129, 140, 248, 0.9);
+        }
+
+        /* Sidebar + toggle */
+        .sidebar-toggle {
+            position: fixed;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            z-index: 40;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(129, 140, 248, 0.7);
+            background: radial-gradient(circle at 30% 20%, rgba(129, 140, 248, 0.5), transparent),
+                rgba(15, 23, 42, 0.96);
+            box-shadow:
+                0 0 18px rgba(129, 140, 248, 0.7),
+                0 0 40px rgba(129, 140, 248, 0.4);
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .sidebar-toggle span {
+            display: block;
+            font-size: 1.35rem;
+            line-height: 1;
+            color: #e0e7ff;
+        }
+
+        .sidebar-toggle:hover {
+            transform: translateY(-1px) scale(1.03);
+            box-shadow:
+                0 0 22px rgba(129, 140, 248, 0.9),
+                0 0 55px rgba(129, 140, 248, 0.45);
+        }
+
+        .info-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: min(440px, 100%);
+            background: radial-gradient(circle at top, rgba(129, 140, 248, 0.16), transparent 55%),
+                #020617;
+            border-left: 1px solid rgba(129, 140, 248, 0.4);
+            box-shadow: -18px 0 40px rgba(0, 0, 0, 0.85);
+            z-index: 50;
+            transform: translateX(100%);
+            transition: transform 0.25s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-sidebar-header {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid rgba(39, 39, 42, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            background: rgba(2, 6, 23, 0.96);
+        }
+
+        .info-sidebar-body {
+            padding: 0.75rem 1.2rem 1.2rem;
+            overflow-y: auto;
+            font-size: 0.78rem;
+        }
+
+        .info-section {
+            border-radius: 0.85rem;
+            padding: 0.65rem 0.75rem 0.8rem;
+            margin-bottom: 0.75rem;
+            background: rgba(12, 10, 26, 0.97);
+            border: 1px solid rgba(39, 39, 42, 0.9);
+        }
+
+        .info-section h3 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0 0 0.25rem;
+        }
+
+        .info-section p {
+            margin: 0.12rem 0;
+        }
+
+        .info-section code {
+            font-size: 0.7rem;
+            padding: 0.12rem 0.25rem;
+            border-radius: 0.25rem;
+            background: rgba(24, 24, 27, 0.9);
+        }
+
+        .info-section ul {
+            margin: 0.25rem 0 0.3rem 0.95rem;
+            padding: 0;
+        }
+
+        .info-section li {
+            margin-bottom: 0.15rem;
+        }
+
+        .info-chip {
+            font-size: 0.65rem;
+            border-radius: 999px;
+            padding: 0.1rem 0.45rem;
+            border: 1px solid rgba(148, 163, 184, 0.8);
+            color: #e5e7eb;
+        }
+
+        .info-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(129, 140, 248, 0.06), transparent 60%),
+                rgba(2, 6, 23, 0.88);
+            z-index: 45;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-out;
+        }
+
+        body.sidebar-open .info-sidebar {
+            transform: translateX(0);
+        }
+
+        body.sidebar-open .info-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top bar -->
+    <header class="top-bar">
+        <div class="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <a href="ComplexSystemsHub.html"
+                    class="inline-flex items-center gap-1 rounded-full border border-zinc-700/80 px-3 py-1 text-xs text-zinc-200 hover:border-emerald-400/80 hover:text-emerald-200 transition">
+                    ← Back to Complex Systems Hub
+                </a>
+                <div class="pill">Complex Systems Lab · Unit 4</div>
+            </div>
+            <div class="badge-live">
+                <span></span>
+                networks · spreading · phase changes
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 pt-6 pb-16 space-y-8">
+        <!-- Intro -->
+        <section class="space-y-2">
+            <h1 class="text-xl md:text-2xl font-semibold tracking-tight">
+                Networks & Spreading Phenomena
+            </h1>
+            <p class="text-sm text-zinc-400 max-w-2xl">
+                Now we care about <span class="text-indigo-300">who is connected to whom</span>.
+                Same agents and rules as previous units, but wired into graphs:
+                <span class="text-sky-300">small-world connectivity</span>,
+                <span class="text-rose-300">epidemics (SIR)</span>,
+                <span class="text-amber-300">cascading failures</span>,
+                and <span class="text-emerald-300">consensus / opinion dynamics</span>.
+            </p>
+        </section>
+
+        <!-- Grid of topics -->
+        <section class="grid gap-6 md:grid-cols-2">
+            <!-- Small-world network -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-indigo-200">
+                            Small-World Network Topology
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Ring lattice + random rewiring → short paths but high clustering.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Model</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">Watts–Strogatz</span>
+                            <span class="pill">N≈40</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="network-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Nodes colored by degree.</span>
+                    <span>Local clusters + shortcuts.</span>
+                </div>
+            </article>
+
+            <!-- SIR on a network -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-rose-200">
+                            Epidemic (SIR) on a Network
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Susceptible, Infected, Recovered nodes; infection travels along edges.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">States</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">S · I · R</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sir-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>S (blue), I (red), R (green).</span>
+                    <span>Local structure shapes the wave.</span>
+                </div>
+            </article>
+
+            <!-- Cascading failures -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-amber-200">
+                            Cascading Failures on a Network
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Failing nodes overload neighbors → a small shock can break a large region.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Phenomenon</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">threshold model</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cascade-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Yellow = overloaded, red = failed.</span>
+                    <span>Visual “domino effect”.</span>
+                </div>
+            </article>
+
+            <!-- Consensus / opinion dynamics -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-emerald-200">
+                            Consensus on a Network
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Each node averages neighbors' opinions → global agreement emerges.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Update</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">DeGroot model</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="consensus-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Nodes drift from multicolor → single hue.</span>
+                    <span>Distributed averaging.</span>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <!-- Overlay & Sidebar toggle -->
+    <div id="info-overlay" class="info-overlay"></div>
+
+    <button id="info-toggle" class="sidebar-toggle" aria-label="Open system explanations">
+        <span>+</span>
+    </button>
+
+    <!-- Info Sidebar -->
+    <aside id="info-sidebar" class="info-sidebar" aria-label="Simulation explanations">
+        <div class="info-sidebar-header">
+            <div class="flex flex-col">
+                <span class="text-xs font-semibold text-indigo-300 tracking-wide uppercase">
+                    Unit 4 · Networks & Spreading
+                </span>
+                <span class="text-[0.72rem] text-zinc-400">
+                    Graphs, epidemics, cascades & consensus — the network layer for your complex systems toolkit.
+                </span>
+            </div>
+            <button id="info-close"
+                class="inline-flex items-center justify-center rounded-full border border-zinc-700/70 text-xs text-zinc-200 w-7 h-7 hover:border-indigo-400/70 hover:text-indigo-200 transition"
+                aria-label="Close">
+                ✕
+            </button>
+        </div>
+        <div class="info-sidebar-body">
+            <!-- Small-world -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-indigo-300">Small-World Networks (Watts–Strogatz)</h3>
+                    <span class="info-chip">short paths · high clustering</span>
+                </div>
+                <p><strong>Idea:</strong> Start with a ring where each node connects to its k nearest neighbors. Then
+                    randomly rewire a fraction of edges. You get short average path lengths (like random graphs) but
+                    keep high clustering (like regular lattices).</p>
+                <p class="mt-1 text-zinc-300">
+                    Construction sketch:
+                </p>
+                <ul class="text-zinc-300">
+                    <li>Nodes on a ring: i = 0…N−1.</li>
+                    <li>Each node connects to k/2 neighbors on each side.</li>
+                    <li>For each edge, with probability p, rewire the far end to a random node.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    You can tune <code>p</code> from 0 (regular lattice) to 1 (random graph) and see the “small-world”
+                    regime emerge in between.
+                </p>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Power grids, roads, airline routes, social networks often show small-world properties.</li>
+                    <li>Impacts how fast failures, ideas, or infections travel.</li>
+                    <li>Useful mental model for Networks: local clustering + a few long links.</li>
+                </ul>
+            </section>
+
+            <!-- SIR -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-rose-300">SIR Epidemic on a Graph</h3>
+                    <span class="info-chip">compartments · per-edge infection</span>
+                </div>
+                <p><strong>Idea:</strong> Classic SIR model, but instead of a well-mixed population we constrain
+                    infections to the network edges.</p>
+                <p class="mt-1 text-zinc-300">
+                    Well-mixed SIR equations:
+                </p>
+                <p class="text-zinc-200">
+                    <code>dS/dt = −β S I</code><br />
+                    <code>dI/dt = β S I − γ I</code><br />
+                    <code>dR/dt = γ I</code>
+                </p>
+                <p class="text-zinc-300">
+                    On a graph, we think more discretely:
+                </p>
+                <ul class="text-zinc-300">
+                    <li>Each node is S, I, or R.</li>
+                    <li>At each step, for each infected node, neighbors become infected with probability
+                        <code>p<sub>inf</sub></code>.
+                    </li>
+                    <li>Infected node recovers with probability <code>p<sub>rec</sub></code>.</li>
+                </ul>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Computer viruses spreading through network connections.</li>
+                    <li>Contagion in power grids (overloads), not just literal diseases.</li>
+                    <li>Helps see why “who is connected to whom” matters more than just counts.</li>
+                </ul>
+            </section>
+
+            <!-- Cascading failures -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-amber-300">Cascading Failures</h3>
+                    <span class="info-chip">threshold dynamics · overload</span>
+                </div>
+                <p><strong>Idea:</strong> Each node carries some load and has a capacity. If load &gt; capacity, the
+                    node
+                    fails and pushes its load to neighbors. Neighbors can then exceed capacity and fail too → cascade.
+                </p>
+                <p class="mt-1 text-zinc-300">
+                    A simple threshold abstraction:
+                </p>
+                <ul class="text-zinc-300">
+                    <li>Each node i has state: normal, overloaded, or failed.</li>
+                    <li>If a sufficient fraction of neighbors are failed or overloaded, node i becomes overloaded.</li>
+                    <li>Overloaded → failed in the next step.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    More detailed models track actual flows F and capacities C, e.g.
+                    <code>Fᵢ(t+1) = Fᵢ(t) + Σⱼ ΔFⱼ→ᵢ</code> and fail when <code>Fᵢ &gt; Cᵢ</code>.
+                </p>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Power grids (line trips, re-routed power, further trips).</li>
+                    <li>Network congestion and overload in data networks.</li>
+                    <li>Industrial alarms cascades: one failure triggers loads / modes that break others.</li>
+                </ul>
+            </section>
+
+            <!-- Consensus -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-emerald-300">Consensus / Opinion Dynamics (DeGroot)</h3>
+                    <span class="info-chip">distributed averaging · agreement</span>
+                </div>
+                <p><strong>Idea:</strong> Each node holds a scalar value (opinion, estimate, voltage setpoint). At each
+                    step, it averages its own value with neighbors' values → eventually they converge.</p>
+                <p class="mt-1 text-zinc-300">
+                    Basic DeGroot update:
+                </p>
+                <p class="text-zinc-200">
+                    <code>xᵢ(t+1) = (1 − α) xᵢ(t) + α · average{xⱼ(t) : j is neighbor of i}</code>
+                </p>
+                <ul class="text-zinc-300">
+                    <li><code>α</code> – how much weight you give to neighbors.</li>
+                    <li>In matrix form: <code>x(t+1) = W x(t)</code> with W a row-stochastic matrix.</li>
+                </ul>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Sensor fusion: distributed sensors agreeing on a measurement.</li>
+                    <li>Clock / phase synchronization in distributed systems.</li>
+                    <li>Multi-agent control: drones agreeing on a formation center / heading.</li>
+                </ul>
+            </section>
+
+            <section class="info-section">
+                <h3 class="text-zinc-200 mb-1">Mapping to my projects</h3>
+                <p class="text-zinc-300">
+                    Unit 4 is the “network brain” you can put under everything else:
+                </p>
+                <ul class="text-zinc-300">
+                    <li><strong>PLCs, Industrial Controllers:</strong> obvious fit — cascading failures, routing,
+                        consensus on
+                        controllers.</li>
+                    <li><strong>Log analysis:</strong> think of logs as signals on a network of components; cascades in
+                        logs = cascades in topology.</li>
+                    <li><strong>Trending apps:</strong> you can literally render these graphs as glowing grids where
+                        infections, failures, and consensus waves propagate.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    Big mental move: instead of “A, B, C are broken”, ask “what graph do they live in, and what regime
+                    (stable / epidemic / cascade / consensus) is this graph in right now?”
+                </p>
+            </section>
+        </div>
+    </aside>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+
+    <!-- Small-world network p5.js -->
+    <script>
+        (function () {
+            const networkSketch = (p) => {
+                let canvas, holder;
+                let nodes = [];
+                let edges = [];
+
+                const N = 42;
+                const K = 4; // each node connected to K neighbors total
+                const BETA = 0.25; // rewiring probability
+
+                function buildNetwork() {
+                    nodes = [];
+                    edges = [];
+
+                    const cx = p.width / 2;
+                    const cy = p.height / 2;
+                    const radius = Math.min(p.width, p.height) * 0.35;
+
+                    for (let i = 0; i < N; i++) {
+                        const angle = (p.TWO_PI * i) / N;
+                        const x = cx + radius * Math.cos(angle);
+                        const y = cy + radius * Math.sin(angle);
+                        nodes.push({
+                            x,
+                            y,
+                            neighbors: new Set()
+                        });
+                    }
+
+                    // initial ring lattice
+                    const halfK = K / 2;
+                    for (let i = 0; i < N; i++) {
+                        for (let j = 1; j <= halfK; j++) {
+                            const to = (i + j) % N;
+                            addEdge(i, to);
+                        }
+                    }
+
+                    // Watts–Strogatz rewiring
+                    for (let i = 0; i < N; i++) {
+                        for (let j = 1; j <= halfK; j++) {
+                            const oldTo = (i + j) % N;
+                            if (i < oldTo && Math.random() < BETA) {
+                                // remove old edge
+                                removeEdge(i, oldTo);
+
+                                // find new target not equal to i and not already connected
+                                let newTo;
+                                do {
+                                    newTo = Math.floor(Math.random() * N);
+                                } while (newTo === i || nodes[i].neighbors.has(newTo));
+
+                                addEdge(i, newTo);
+                            }
+                        }
+                    }
+
+                    // build edge list from neighbors
+                    edges = [];
+                    for (let i = 0; i < N; i++) {
+                        for (let j of nodes[i].neighbors) {
+                            if (i < j) edges.push([i, j]);
+                        }
+                    }
+                }
+
+                function addEdge(a, b) {
+                    nodes[a].neighbors.add(b);
+                    nodes[b].neighbors.add(a);
+                }
+
+                function removeEdge(a, b) {
+                    nodes[a].neighbors.delete(b);
+                    nodes[b].neighbors.delete(a);
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    buildNetwork();
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("network-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(30);
+                    buildNetwork();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    p.background(6, 9, 25);
+
+                    // edges
+                    p.stroke(129, 140, 248, 120);
+                    p.strokeWeight(1);
+                    for (let [i, j] of edges) {
+                        const a = nodes[i];
+                        const b = nodes[j];
+                        p.line(a.x, a.y, b.x, b.y);
+                    }
+
+                    // nodes
+                    for (let i = 0; i < nodes.length; i++) {
+                        const n = nodes[i];
+                        const deg = n.neighbors.size;
+                        const t = p.constrain(p.map(deg, 2, 10, 0, 1), 0, 1);
+                        const r = p.lerp(4, 9, t);
+
+                        const c = p.lerpColor(
+                            p.color(56, 189, 248),
+                            p.color(129, 140, 248),
+                            t
+                        );
+                        p.noStroke();
+                        p.fill(c);
+                        p.ellipse(n.x, n.y, r, r);
+                    }
+
+                    // HUD
+                    p.noStroke();
+                    p.fill(15, 23, 42, 220);
+                    p.rect(0, 0, 260, 38);
+                    p.fill(224, 231, 255);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text("Small-world network (Watts–Strogatz)", 8, 6);
+                    p.fill(148, 163, 184);
+                    p.textSize(9);
+                    p.text("Nodes sized by degree", 8, 20);
+                };
+            };
+
+            new p5(networkSketch);
+        })();
+    </script>
+
+    <!-- SIR p5.js -->
+    <script>
+        (function () {
+            const sirSketch = (p) => {
+                let canvas, holder;
+                let nodes = [];
+                let edges = [];
+
+                const N = 42;
+                const K = 4;
+                const BETA = 0.25; // rewiring
+                const PINF = 0.08; // infection prob per edge
+                const PREC = 0.02; // recovery prob
+
+                function buildNetwork() {
+                    nodes = [];
+                    edges = [];
+
+                    const cx = p.width / 2;
+                    const cy = p.height / 2;
+                    const radius = Math.min(p.width, p.height) * 0.35;
+
+                    for (let i = 0; i < N; i++) {
+                        const angle = (p.TWO_PI * i) / N;
+                        const x = cx + radius * Math.cos(angle);
+                        const y = cy + radius * Math.sin(angle);
+                        nodes.push({
+                            x,
+                            y,
+                            neighbors: new Set(),
+                            state: "S" // S, I, R
+                        });
+                    }
+
+                    const halfK = K / 2;
+                    for (let i = 0; i < N; i++) {
+                        for (let j = 1; j <= halfK; j++) {
+                            const to = (i + j) % N;
+                            addEdge(i, to);
+                        }
+                    }
+
+                    for (let i = 0; i < N; i++) {
+                        for (let j = 1; j <= halfK; j++) {
+                            const oldTo = (i + j) % N;
+                            if (i < oldTo && Math.random() < BETA) {
+                                removeEdge(i, oldTo);
+                                let newTo;
+                                do {
+                                    newTo = Math.floor(Math.random() * N);
+                                } while (newTo === i || nodes[i].neighbors.has(newTo));
+                                addEdge(i, newTo);
+                            }
+                        }
+                    }
+
+                    edges = [];
+                    for (let i = 0; i < N; i++) {
+                        for (let j of nodes[i].neighbors) {
+                            if (i < j) edges.push([i, j]);
+                        }
+                    }
+
+                    // seed infection
+                    const seed = Math.floor(Math.random() * N);
+                    nodes[seed].state = "I";
+                }
+
+                function addEdge(a, b) {
+                    nodes[a].neighbors.add(b);
+                    nodes[b].neighbors.add(a);
+                }
+
+                function removeEdge(a, b) {
+                    nodes[a].neighbors.delete(b);
+                    nodes[b].neighbors.delete(a);
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    buildNetwork();
+                }
+
+                function stepSIR() {
+                    const newStates = nodes.map(n => n.state);
+
+                    for (let i = 0; i < nodes.length; i++) {
+                        const n = nodes[i];
+                        if (n.state === "I") {
+                            // attempt infection
+                            for (let j of n.neighbors) {
+                                if (nodes[j].state === "S" && Math.random() < PINF) {
+                                    newStates[j] = "I";
+                                }
+                            }
+                            // recovery
+                            if (Math.random() < PREC) {
+                                newStates[i] = "R";
+                            }
+                        }
+                    }
+
+                    for (let i = 0; i < nodes.length; i++) {
+                        nodes[i].state = newStates[i];
+                    }
+
+                    // if no infected remain, restart
+                    if (!nodes.some(n => n.state === "I")) {
+                        buildNetwork();
+                    }
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("sir-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(25);
+                    buildNetwork();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    p.background(10, 7, 20);
+
+                    stepSIR();
+
+                    // edges
+                    p.stroke(63, 63, 70, 90);
+                    p.strokeWeight(1);
+                    for (let [i, j] of edges) {
+                        const a = nodes[i];
+                        const b = nodes[j];
+                        p.line(a.x, a.y, b.x, b.y);
+                    }
+
+                    // nodes
+                    for (let n of nodes) {
+                        let col;
+                        if (n.state === "S") col = p.color(59, 130, 246);
+                        else if (n.state === "I") col = p.color(239, 68, 68);
+                        else col = p.color(34, 197, 94);
+                        p.noStroke();
+                        p.fill(col);
+                        p.ellipse(n.x, n.y, 8, 8);
+                    }
+
+                    // HUD
+                    p.noStroke();
+                    p.fill(15, 23, 42, 220);
+                    p.rect(0, 0, 260, 38);
+                    p.fill(254, 226, 226);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text("SIR epidemic on a network", 8, 6);
+                    p.fill(248, 250, 252);
+                    p.textSize(9);
+                    const s = nodes.filter(n => n.state === "S").length;
+                    const i = nodes.filter(n => n.state === "I").length;
+                    const r = nodes.filter(n => n.state === "R").length;
+                    p.text(`S:${s}  I:${i}  R:${r}`, 8, 20);
+                };
+            };
+
+            new p5(sirSketch);
+        })();
+    </script>
+
+    <!-- Cascading failures p5.js -->
+    <script>
+        (function () {
+            const cascadeSketch = (p) => {
+                let canvas, holder;
+                let nodes = [];
+                let edges = [];
+                const GRID_W = 9;
+                const GRID_H = 6;
+
+                function buildGrid() {
+                    nodes = [];
+                    edges = [];
+
+                    const marginX = 30;
+                    const marginY = 30;
+                    const spacingX = (p.width - 2 * marginX) / (GRID_W - 1);
+                    const spacingY = (p.height - 2 * marginY) / (GRID_H - 1);
+
+                    for (let y = 0; y < GRID_H; y++) {
+                        for (let x = 0; x < GRID_W; x++) {
+                            const px = marginX + x * spacingX;
+                            const py = marginY + y * spacingY;
+                            nodes.push({
+                                x: px,
+                                y: py,
+                                state: "normal", // normal, overloaded, failed
+                                threshold: 0.35 + Math.random() * 0.25,
+                                // load fraction of failed neighbors
+                            });
+                        }
+                    }
+
+                    const index = (x, y) => y * GRID_W + x;
+
+                    for (let y = 0; y < GRID_H; y++) {
+                        for (let x = 0; x < GRID_W; x++) {
+                            if (x < GRID_W - 1) edges.push([index(x, y), index(x + 1, y)]);
+                            if (y < GRID_H - 1) edges.push([index(x, y), index(x, y + 1)]);
+                        }
+                    }
+
+                    // initial shock: fail a random central-ish node
+                    const mid = index(Math.floor(GRID_W / 2), Math.floor(GRID_H / 2));
+                    nodes[mid].state = "failed";
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    buildGrid();
+                }
+
+                function stepCascade() {
+                    const newStates = nodes.map(n => n.state);
+
+                    for (let i = 0; i < nodes.length; i++) {
+                        if (nodes[i].state === "failed") continue;
+
+                        // compute fraction of neighbors failed or overloaded
+                        const neighbors = [];
+                        for (let [a, b] of edges) {
+                            if (a === i) neighbors.push(b);
+                            else if (b === i) neighbors.push(a);
+                        }
+
+                        if (neighbors.length === 0) continue;
+
+                        let stressed = 0;
+                        for (let j of neighbors) {
+                            if (nodes[j].state === "failed" || nodes[j].state === "overloaded") stressed++;
+                        }
+                        const frac = stressed / neighbors.length;
+
+                        if (nodes[i].state === "normal" && frac > nodes[i].threshold) {
+                            newStates[i] = "overloaded";
+                        } else if (nodes[i].state === "overloaded") {
+                            newStates[i] = "failed";
+                        }
+                    }
+
+                    for (let i = 0; i < nodes.length; i++) {
+                        nodes[i].state = newStates[i];
+                    }
+
+                    // if everything is normal or failed only (no overloads), reinitialize after a while
+                    if (!nodes.some(n => n.state === "overloaded")) {
+                        if (nodes.filter(n => n.state === "failed").length > 0) {
+                            // brief pause then restart
+                            if (Math.random() < 0.02) buildGrid();
+                        }
+                    }
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("cascade-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(20);
+                    buildGrid();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    p.background(17, 12, 20);
+                    stepCascade();
+
+                    // edges
+                    p.stroke(55, 65, 81, 120);
+                    p.strokeWeight(1);
+                    for (let [i, j] of edges) {
+                        const a = nodes[i];
+                        const b = nodes[j];
+                        p.line(a.x, a.y, b.x, b.y);
+                    }
+
+                    // nodes
+                    for (let n of nodes) {
+                        let col;
+                        if (n.state === "normal") col = p.color(55, 65, 81);
+                        else if (n.state === "overloaded") col = p.color(252, 211, 77);
+                        else col = p.color(248, 113, 113);
+                        p.noStroke();
+                        p.fill(col);
+                        p.rectMode(p.CENTER);
+                        p.rect(n.x, n.y, 10, 10, 3);
+                    }
+
+                    // HUD
+                    p.noStroke();
+                    p.fill(15, 23, 42, 220);
+                    p.rect(0, 0, 260, 38);
+                    p.fill(254, 249, 195);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text("Cascading failures on a grid", 8, 6);
+                    p.fill(252, 211, 77);
+                    p.textSize(9);
+                    const failed = nodes.filter(n => n.state === "failed").length;
+                    p.text(`failed nodes: ${failed}`, 8, 20);
+                };
+            };
+
+            new p5(cascadeSketch);
+        })();
+    </script>
+
+    <!-- Consensus p5.js -->
+    <script>
+        (function () {
+            const consensusSketch = (p) => {
+                let canvas, holder;
+                let nodes = [];
+                let edges = [];
+                const N = 32;
+                const K = 4;
+                const BETA = 0.3;
+                const ALPHA = 0.2;
+
+                function buildNetwork() {
+                    nodes = [];
+                    edges = [];
+
+                    const cx = p.width / 2;
+                    const cy = p.height / 2;
+                    const radius = Math.min(p.width, p.height) * 0.35;
+
+                    for (let i = 0; i < N; i++) {
+                        const angle = (p.TWO_PI * i) / N;
+                        const x = cx + radius * Math.cos(angle);
+                        const y = cy + radius * Math.sin(angle);
+                        nodes.push({
+                            x,
+                            y,
+                            neighbors: new Set(),
+                            value: Math.random() // opinion in [0,1]
+                        });
+                    }
+
+                    const halfK = K / 2;
+                    for (let i = 0; i < N; i++) {
+                        for (let j = 1; j <= halfK; j++) {
+                            const to = (i + j) % N;
+                            addEdge(i, to);
+                        }
+                    }
+
+                    for (let i = 0; i < N; i++) {
+                        for (let j = 1; j <= halfK; j++) {
+                            const oldTo = (i + j) % N;
+                            if (i < oldTo && Math.random() < BETA) {
+                                removeEdge(i, oldTo);
+                                let newTo;
+                                do {
+                                    newTo = Math.floor(Math.random() * N);
+                                } while (newTo === i || nodes[i].neighbors.has(newTo));
+                                addEdge(i, newTo);
+                            }
+                        }
+                    }
+
+                    edges = [];
+                    for (let i = 0; i < N; i++) {
+                        for (let j of nodes[i].neighbors) {
+                            if (i < j) edges.push([i, j]);
+                        }
+                    }
+                }
+
+                function addEdge(a, b) {
+                    nodes[a].neighbors.add(b);
+                    nodes[b].neighbors.add(a);
+                }
+
+                function removeEdge(a, b) {
+                    nodes[a].neighbors.delete(b);
+                    nodes[b].neighbors.delete(a);
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    buildNetwork();
+                }
+
+                function stepConsensus() {
+                    const newVals = nodes.map(n => n.value);
+
+                    for (let i = 0; i < nodes.length; i++) {
+                        const n = nodes[i];
+                        const neighbors = Array.from(n.neighbors);
+                        if (neighbors.length === 0) continue;
+                        let sum = 0;
+                        for (let j of neighbors) sum += nodes[j].value;
+                        const avg = sum / neighbors.length;
+
+                        newVals[i] = (1 - ALPHA) * n.value + ALPHA * avg;
+                    }
+
+                    for (let i = 0; i < nodes.length; i++) {
+                        nodes[i].value = newVals[i];
+                    }
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("consensus-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(30);
+                    buildNetwork();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    p.background(6, 12, 18);
+
+                    stepConsensus();
+
+                    // edges
+                    p.stroke(51, 65, 85, 130);
+                    p.strokeWeight(1);
+                    for (let [i, j] of edges) {
+                        const a = nodes[i];
+                        const b = nodes[j];
+                        p.line(a.x, a.y, b.x, b.y);
+                    }
+
+                    // nodes
+                    for (let n of nodes) {
+                        const v = p.constrain(n.value, 0, 1);
+                        const col = p.lerpColor(
+                            p.color(56, 189, 248), // blue-ish
+                            p.color(16, 185, 129), // green-ish
+                            v
+                        );
+                        p.noStroke();
+                        p.fill(col);
+                        p.ellipse(n.x, n.y, 10, 10);
+                    }
+
+                    // HUD
+                    p.noStroke();
+                    p.fill(15, 23, 42, 220);
+                    p.rect(0, 0, 260, 38);
+                    p.fill(209, 250, 229);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text("Consensus on a network", 8, 6);
+                    p.fill(148, 163, 184);
+                    p.textSize(9);
+                    const mean =
+                        nodes.reduce((acc, n) => acc + n.value, 0) / nodes.length;
+                    p.text(`avg value ≈ ${mean.toFixed(2)}`, 8, 20);
+                };
+            };
+
+            new p5(consensusSketch);
+        })();
+    </script>
+
+    <!-- Sidebar JS -->
+    <script>
+        (function () {
+            const body = document.body;
+            const toggleBtn = document.getElementById('info-toggle');
+            const closeBtn = document.getElementById('info-close');
+            const overlay = document.getElementById('info-overlay');
+
+            function toggleSidebar(force) {
+                const shouldOpen = typeof force === 'boolean' ? force : !body.classList.contains('sidebar-open');
+                if (shouldOpen) {
+                    body.classList.add('sidebar-open');
+                } else {
+                    body.classList.remove('sidebar-open');
+                }
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => toggleSidebar());
+            }
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => toggleSidebar(false));
+            }
+            if (overlay) {
+                overlay.addEventListener('click', () => toggleSidebar(false));
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    toggleSidebar(false);
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>

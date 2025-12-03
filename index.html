@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Jaime Brenes Rojas · Industrial Automation Engineer</title>
     <meta name="description"
-        content="DCS / Industrial Automation Engineer portfolio – Ovation, ICS networking, log analytics, HMI migration, and protocol tooling." />
+        content="DCS / Industrial Automation Engineer portfolio – DCS, ICS networking, log analytics, HMI migration, and protocol tooling." />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Smooth scroll + nicer focus ring */
@@ -83,13 +83,14 @@
     <section id="home" class="mx-auto max-w-6xl px-4 py-16 md:py-24">
         <div class="grid md:grid-cols-5 gap-10 items-center">
             <div class="md:col-span-3">
-                <p class="text-xs uppercase tracking-[0.2em] text-zinc-400">Mechanical Engineering · DCSs/SCADA · ICS
-                    Networking</p>
+                <p class="text-xs uppercase tracking-[0.2em] text-zinc-400">Mechanical Engineering · DCS / HMI / SCADA ·
+                    ICS Networking</p>
                 <h1 class="mt-3 text-3xl md:text-5xl font-bold leading-tight">
                     Industrial Automation Engineer building tools for real-world control systems troubleshooting
                 </h1>
                 <p class="mt-4 text-zinc-300 text-sm md:text-base leading-relaxed">
-                    Results-oriented DCS/Industrial Automation Engineer with experience across power generation and
+                    Results-oriented Mechanical/Industrial Automation Engineer with experience across power generation
+                    and
                     water
                     treatment plants. I combine
                     <span class="font-semibold"> my mechanical engineering knowledge, DCS troubleshooting experience,
@@ -117,7 +118,7 @@
                     class="relative rounded-3xl p-6 border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 shadow-xl">
                     <h3 class="text-sm font-semibold">Quick profile</h3>
                     <ul class="mt-3 space-y-2 text-sm text-zinc-300">
-                        <li>• Emerson Ovation DCS, HMI/SCADA, datalinks</li>
+                        <li>• DCS, HMI/SCADA, datalinks</li>
                         <li>• ICS protocols: ICCP/MMS, Modbus, OPC UA/DA, DNP3</li>
                         <li>• Network segmentation, VLANs, Cisco IOS XE</li>
                         <li>• Logs, Wireshark dissectors, JSON-based tooling</li>
@@ -132,13 +133,13 @@
     <section id="lab" class="mx-auto max-w-6xl px-4 py-20">
         <h2 class="text-2xl md:text-3xl font-bold mb-3">Interactive Labs</h2>
         <p class="text-sm text-zinc-400 mb-4">
-            Experimental visual simulations of science and engineering concepts –
-            starting with a <span class="font-semibold">Fourier Winding Lab</span>
-            that shows how complex exponentials build the Fourier transform.
+            Interactive visual labs I use to reason about signals, complex systems, and control behavior –
+            from a <span class="font-semibold">Fourier Winding Lab</span> for vibration analysis
+            to a <span class="font-semibold">Complex Systems Hub</span> inspired by networks and cascades.
         </p>
 
-        <!-- Lab card: simulation + button as one entity -->
-        <div class="rounded-3xl border border-zinc-800 bg-zinc-900/40 shadow-lg overflow-hidden">
+        <!-- Lab card: Fourier (existing) -->
+        <div class="rounded-3xl border border-zinc-800 bg-zinc-900/40 shadow-lg overflow-hidden mb-6">
             <!-- Starfield preview -->
             <div id="p5-holder" class="w-full h-[125px]"></div>
 
@@ -153,7 +154,25 @@
                 </p>
             </div>
         </div>
+
+        <!-- Lab card: Complex Systems Hub (new) -->
+        <div class="rounded-3xl border border-zinc-800 bg-zinc-900/40 shadow-lg overflow-hidden">
+            <!-- Complex systems preview -->
+            <div id="p5-holder-complex" class="w-full h-[125px]"></div>
+
+            <!-- Footer with button + caption -->
+            <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-t border-zinc-800 bg-zinc-950/70">
+                <a href="labs/Systems/ComplexSystemsHub.html" target="_blank" rel="noopener noreferrer" class="lab-btn">
+                    Open Complex Systems Lab Hub <span class="text-xs opacity-70">(new tab)</span>
+                </a>
+                <p class="text-xs text-zinc-500">
+                    Watch agents with simple local rules create global behavior: flocking, epidemics, cascades,
+                    criticality and more.
+                </p>
+            </div>
+        </div>
     </section>
+
 
 
     <!-- Projects -->
@@ -508,6 +527,7 @@
             btn.addEventListener('click', () => mobile.classList.toggle('hidden'));
         }
 
+        /* ========= p5.js preview #1 – Fourier Lab (star rain + wave) ========= */
         let sketch = (p) => {
             let stars = [];
             let wave;
@@ -600,7 +620,6 @@
 
                 show() {
                     p.push();
-                    // default colorMode is RGB, so we don't change it here
 
                     for (let x = 0; x < p.width; x += this.step) {
                         const x2 = x + this.step;
@@ -640,10 +659,145 @@
                     p.pop();
                 }
             }
-
         };
 
         new p5(sketch);
+
+        /* ========= p5.js preview #2 – Slime Mold Trail Network (Complex Systems Hub) ========= */
+        let complexPreview = (p) => {
+            let holder;
+            let trail; // off-screen buffer for trails
+            let agents = [];
+            const AGENT_COUNT = 450;
+
+            const SPEED = 1.3;
+            const SENSE_DIST = 6;
+            const SENSE_ANGLE = 0.4; // radians
+            const TURN_ANGLE = 0.25; // radians
+
+            function initAgents() {
+                agents = [];
+                for (let i = 0; i < AGENT_COUNT; i++) {
+                    agents.push({
+                        x: p.random(p.width),
+                        y: p.random(p.height),
+                        angle: p.random(p.TWO_PI)
+                    });
+                }
+            }
+
+            function init() {
+                if (!holder) return;
+                trail = p.createGraphics(p.width, p.height);
+                trail.pixelDensity(1);
+                trail.background(2, 4, 10);
+                trail.strokeWeight(1.1);
+                initAgents();
+            }
+
+            function resizeCanvasToHolder() {
+                if (!holder) return;
+                const rect = holder.getBoundingClientRect();
+                const w = Math.max(260, rect.width);
+                const h = rect.height || 125;
+                p.resizeCanvas(w, h);
+                init();
+            }
+
+            function sense(agent, angleOffset) {
+                const ang = agent.angle + angleOffset;
+                let sx = agent.x + Math.cos(ang) * SENSE_DIST;
+                let sy = agent.y + Math.sin(ang) * SENSE_DIST;
+
+                // wrap
+                if (sx < 0) sx += p.width;
+                if (sx >= p.width) sx -= p.width;
+                if (sy < 0) sy += p.height;
+                if (sy >= p.height) sy -= p.height;
+
+                const c = trail.get(Math.floor(sx), Math.floor(sy));
+                // brightness-ish measure
+                return c[0] + c[1] + c[2];
+            }
+
+            function updateAgents() {
+                // fade old trails a bit (decay)
+                trail.noStroke();
+                trail.fill(0, 0, 0, 22); // alpha = decay speed
+                trail.rect(0, 0, trail.width, trail.height);
+
+                trail.stroke(180, 255, 160, 230); // slime color
+
+                for (let a of agents) {
+                    const forward = sense(a, 0);
+                    const left = sense(a, SENSE_ANGLE);
+                    const right = sense(a, -SENSE_ANGLE);
+
+                    // turn towards stronger trail, with a bit of randomness
+                    if (forward < left && forward < right) {
+                        a.angle += (Math.random() < 0.5 ? 1 : -1) * TURN_ANGLE;
+                    } else if (left > right) {
+                        a.angle += TURN_ANGLE;
+                    } else if (right > left) {
+                        a.angle -= TURN_ANGLE;
+                    }
+
+                    // small jitter
+                    a.angle += (Math.random() - 0.5) * 0.05;
+
+                    // move
+                    a.x += Math.cos(a.angle) * SPEED;
+                    a.y += Math.sin(a.angle) * SPEED;
+
+                    // wrap around edges
+                    if (a.x < 0) a.x += p.width;
+                    if (a.x >= p.width) a.x -= p.width;
+                    if (a.y < 0) a.y += p.height;
+                    if (a.y >= p.height) a.y -= p.height;
+
+                    // deposit trail
+                    trail.point(a.x, a.y);
+                }
+
+                // occasionally reseed agents a bit to keep image lively
+                if (p.frameCount % 1200 === 0) {
+                    initAgents();
+                }
+            }
+
+            p.setup = () => {
+                holder = document.getElementById("p5-holder-complex");
+                if (!holder) return;
+                const rect = holder.getBoundingClientRect();
+                const canvas = p.createCanvas(rect.width, rect.height);
+                canvas.parent("p5-holder-complex");
+                p.frameRate(45);
+                init();
+            };
+
+            p.windowResized = () => {
+                if (!holder) return;
+                resizeCanvasToHolder();
+            };
+
+            p.draw = () => {
+                if (!holder || !trail) return;
+                updateAgents();
+
+                // base background
+                p.background(3, 5, 12);
+
+                // draw the trail buffer
+                p.image(trail, 0, 0);
+
+                // subtle vignette
+                p.noFill();
+                p.stroke(15, 23, 42, 160);
+                p.rect(0, 0, p.width, p.height);
+            };
+        };
+
+        new p5(complexPreview);
     </script>
 
 </body>

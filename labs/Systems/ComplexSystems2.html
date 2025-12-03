@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Complex Systems Lab · Unit 2 · Chaos & Nonlinear Dynamics</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background: #050509;
+            color: #f4f4f5;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(10px);
+            background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent),
+                rgba(9, 9, 11, 0.96);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.9);
+        }
+
+        .sketch-card {
+            border-radius: 1.25rem;
+            border: 1px solid #27272a;
+            background: radial-gradient(circle at top, rgba(59, 130, 246, 0.08), transparent 55%),
+                rgba(15, 15, 19, 0.98);
+            box-shadow:
+                0 18px 45px rgba(0, 0, 0, 0.7),
+                0 0 24px rgba(59, 130, 246, 0.16);
+        }
+
+        .sketch-holder {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            border-radius: 0.9rem;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #020617, #020617 35%, #020617);
+        }
+
+        .pill {
+            border-radius: 999px;
+            border: 1px solid rgba(161, 161, 170, 0.4);
+            padding: 0.15rem 0.6rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #a1a1aa;
+        }
+
+        .badge-live {
+            border-radius: 999px;
+            padding: 0.2rem 0.65rem;
+            font-size: 0.7rem;
+            background: rgba(59, 130, 246, 0.18);
+            color: #dbeafe;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .badge-live span {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #3b82f6;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.9);
+        }
+
+        /* Sidebar + toggle */
+        .sidebar-toggle {
+            position: fixed;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            z-index: 40;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(96, 165, 250, 0.7);
+            background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.4), transparent),
+                rgba(15, 23, 42, 0.96);
+            box-shadow:
+                0 0 18px rgba(59, 130, 246, 0.7),
+                0 0 40px rgba(59, 130, 246, 0.4);
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .sidebar-toggle span {
+            display: block;
+            font-size: 1.35rem;
+            line-height: 1;
+            color: #dbeafe;
+        }
+
+        .sidebar-toggle:hover {
+            transform: translateY(-1px) scale(1.03);
+            box-shadow:
+                0 0 22px rgba(59, 130, 246, 0.9),
+                0 0 55px rgba(59, 130, 246, 0.45);
+        }
+
+        .info-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: min(440px, 100%);
+            background: radial-gradient(circle at top, rgba(59, 130, 246, 0.16), transparent 55%),
+                #020617;
+            border-left: 1px solid rgba(59, 130, 246, 0.4);
+            box-shadow: -18px 0 40px rgba(0, 0, 0, 0.85);
+            z-index: 50;
+            transform: translateX(100%);
+            transition: transform 0.25s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-sidebar-header {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid rgba(39, 39, 42, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            background: rgba(2, 6, 23, 0.96);
+        }
+
+        .info-sidebar-body {
+            padding: 0.75rem 1.2rem 1.2rem;
+            overflow-y: auto;
+            font-size: 0.78rem;
+        }
+
+        .info-section {
+            border-radius: 0.85rem;
+            padding: 0.65rem 0.75rem 0.8rem;
+            margin-bottom: 0.75rem;
+            background: rgba(12, 10, 26, 0.97);
+            border: 1px solid rgba(39, 39, 42, 0.9);
+        }
+
+        .info-section h3 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0 0 0.25rem;
+        }
+
+        .info-section p {
+            margin: 0.12rem 0;
+        }
+
+        .info-section code {
+            font-size: 0.7rem;
+            padding: 0.12rem 0.25rem;
+            border-radius: 0.25rem;
+            background: rgba(24, 24, 27, 0.9);
+        }
+
+        .info-section ul {
+            margin: 0.25rem 0 0.3rem 0.95rem;
+            padding: 0;
+        }
+
+        .info-section li {
+            margin-bottom: 0.15rem;
+        }
+
+        .info-chip {
+            font-size: 0.65rem;
+            border-radius: 999px;
+            padding: 0.1rem 0.45rem;
+            border: 1px solid rgba(148, 163, 184, 0.8);
+            color: #e5e7eb;
+        }
+
+        .info-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(59, 130, 246, 0.06), transparent 60%),
+                rgba(2, 6, 23, 0.88);
+            z-index: 45;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-out;
+        }
+
+        body.sidebar-open .info-sidebar {
+            transform: translateX(0);
+        }
+
+        body.sidebar-open .info-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top bar -->
+    <header class="top-bar">
+        <div class="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <a href="ComplexSystemsHub.html"
+                    class="inline-flex items-center gap-1 rounded-full border border-zinc-700/80 px-3 py-1 text-xs text-zinc-200 hover:border-emerald-400/80 hover:text-emerald-200 transition">
+                    ← Back to Complex Systems Hub
+                </a>
+                <div class="pill">Complex Systems Lab · Unit 2</div>
+            </div>
+            <div class="badge-live">
+                <span></span>
+                chaos & nonlinear dynamics
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 pt-6 pb-16 space-y-8">
+        <!-- Intro -->
+        <section class="space-y-2">
+            <h1 class="text-xl md:text-2xl font-semibold tracking-tight">
+                Chaos, Attractors & Bifurcations
+            </h1>
+            <p class="text-sm text-zinc-400 max-w-2xl">
+                Four classic chaotic systems:
+                <span class="text-sky-300">Lorenz attractor</span>,
+                a <span class="text-emerald-300">Logistic map</span>,
+                a <span class="text-rose-300">Double pendulum</span>,
+                and a <span class="text-indigo-300">Bifurcation diagram</span>.
+                Same idea as Unit 1: simple equations → wild, structured behavior.
+            </p>
+        </section>
+
+        <!-- Grid of topics -->
+        <section class="grid gap-6 md:grid-cols-2">
+            <!-- Lorenz block -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-sky-200">
+                            Lorenz Attractor · Chaotic Flow
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            3 ODEs, sensitive to initial conditions → butterfly-shaped attractor.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Model</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">σ=10</span>
+                            <span class="pill">ρ=28</span>
+                            <span class="pill">β=8/3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="lorenz-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Chaotic 3D trajectory projected to 2D. 🦋</span>
+                    <span>Nearby starts diverge, but shape persists.</span>
+                </div>
+            </article>
+
+            <!-- Logistic map time series -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-emerald-200">
+                            Logistic Map · Time Series
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Simple nonlinear recurrence x<sub>n+1</sub> = r x(1−x) → chaos for some r.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Parameters</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">r ≈ 3.8</span>
+                            <span class="pill">0 ≤ x ≤ 1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="logistic-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Trace of x over time; looks random but is deterministic.</span>
+                    <span>Classic 1D chaos example.</span>
+                </div>
+            </article>
+
+            <!-- Double pendulum -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-rose-200">
+                            Double Pendulum · Chaotic Motion
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Two linked pendulums → tiny changes in start → very different paths.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Physics</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">L<sub>1</sub>=L<sub>2</sub></span>
+                            <span class="pill">m<sub>1</sub>=m<sub>2</sub></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pendulum-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Lower mass leaves a tangled trail. 🎢</span>
+                    <span>Real mechanical chaos.</span>
+                </div>
+            </article>
+
+            <!-- Bifurcation diagram -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-indigo-200">
+                            Logistic Map · Bifurcation Diagram
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Vary r, plot long-term x → fixed points, cycles, then chaos & windows.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">View</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">2.5 ≤ r ≤ 4</span>
+                            <span class="pill">steady-state x</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="bif-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Structure inside chaos: bands, splits, islands.</span>
+                    <span>Parameter space view of behavior.</span>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <!-- Overlay & Sidebar toggle -->
+    <div id="info-overlay" class="info-overlay"></div>
+
+    <button id="info-toggle" class="sidebar-toggle" aria-label="Open system explanations">
+        <span>+</span>
+    </button>
+
+    <!-- Info Sidebar -->
+    <aside id="info-sidebar" class="info-sidebar" aria-label="Simulation explanations">
+        <div class="info-sidebar-header">
+            <div class="flex flex-col">
+                <span class="text-xs font-semibold text-sky-300 tracking-wide uppercase">
+                    Unit 2 · Chaos & Nonlinear Dynamics
+                </span>
+                <span class="text-[0.72rem] text-zinc-400">
+                    Equations, intuition & engineering links for each canvas.
+                </span>
+            </div>
+            <button id="info-close"
+                class="inline-flex items-center justify-center rounded-full border border-zinc-700/70 text-xs text-zinc-200 w-7 h-7 hover:border-sky-400/70 hover:text-sky-200 transition"
+                aria-label="Close">
+                ✕
+            </button>
+        </div>
+        <div class="info-sidebar-body">
+            <!-- Lorenz -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-sky-300">Lorenz Attractor</h3>
+                    <span class="info-chip">deterministic chaos · strange attractor</span>
+                </div>
+                <p><strong>Idea:</strong> A simplified model of convection in the atmosphere. Three coupled nonlinear
+                    ODEs produce a “butterfly” attractor.</p>
+                <p class="mt-1 text-zinc-300">
+                    State variables: <code>x(t)</code> (convective intensity),
+                    <code>y(t)</code> (temperature difference), <code>z(t)</code> (vertical temperature profile).
+                </p>
+                <p class="text-zinc-200">
+                    <code>dx/dt = σ (y − x)</code><br />
+                    <code>dy/dt = x (ρ − z) − y</code><br />
+                    <code>dz/dt = x·y − β z</code>
+                </p>
+                <ul class="text-zinc-300">
+                    <li><code>σ</code> – Prandtl number (ratio of momentum to thermal diffusion).</li>
+                    <li><code>ρ</code> – Rayleigh number (driving temperature difference).</li>
+                    <li><code>β</code> – geometric factor.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    For certain parameters, solutions never settle to a point or cycle but stay within a bounded,
+                    fractal
+                    “strange attractor”.
+                    Tiny changes in initial conditions → trajectories diverge exponentially, but the overall shape is
+                    stable.
+                </p>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Weather & climate models: chaos in atmospheric dynamics.</li>
+                    <li>Any nonlinear control system with feedback & delay can show similar sensitivity.</li>
+                    <li>Digital twins: good cautionary example that “deterministic” ≠ “predictable”.</li>
+                </ul>
+            </section>
+
+            <!-- Logistic map -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-emerald-300">Logistic Map</h3>
+                    <span class="info-chip">1D recurrence · route to chaos</span>
+                </div>
+                <p><strong>Idea:</strong> A very simple discrete-time model of a population with limited resources, but
+                    it already contains chaos.</p>
+                <p class="mt-1 text-zinc-200">
+                    <code>x<sub>n+1</sub> = r · x<sub>n</sub> · (1 − x<sub>n</sub>)</code>
+                </p>
+                <ul class="text-zinc-300">
+                    <li><code>x<sub>n</sub></code> – normalized population (0 to 1) at step n.</li>
+                    <li><code>r</code> – growth parameter.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    As <code>r</code> increases:
+                </p>
+                <ul class="text-zinc-300">
+                    <li><code>1 &lt; r &lt; 3</code>: population settles to a fixed value.</li>
+                    <li><code>3 &lt; r &lt; ~3.449</code>: 2-cycle (population flips between two values).</li>
+                    <li>Then 4-cycle, 8-cycle, … → period-doubling cascade → chaos.</li>
+                    <li>Inside chaos there are windows where regular cycles reappear.</li>
+                </ul>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Population dynamics & resource-limited growth.</li>
+                    <li>Control loops where gain (r) gets too high → oscillations / chaos.</li>
+                    <li>Simple gateway model to understand how nonlinear maps behave in parameter space.</li>
+                </ul>
+            </section>
+
+            <!-- Double pendulum -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-rose-300">Double Pendulum</h3>
+                    <span class="info-chip">mechanical chaos · real hardware</span>
+                </div>
+                <p><strong>Idea:</strong> Two pendulums attached in series. The equations are basic Newtonian mechanics,
+                    but the motion is extremely sensitive to initial conditions.</p>
+                <p class="mt-1 text-zinc-300">
+                    Angles <code>θ₁</code>, <code>θ₂</code>, with lengths L and masses m.
+                    Equations (one common form):
+                </p>
+                <p class="text-zinc-200">
+                    <code>
+                        dθ₁/dt = ω₁<br />
+                        dθ₂/dt = ω₂
+                    </code><br />
+                    <code>
+                        dω₁/dt = [−g(2m₁+m₂)sinθ₁ − m₂g sin(θ₁ − 2θ₂) − 2 sin(θ₁−θ₂)m₂(ω₂²L₂ + ω₁²L₁ cos(θ₁−θ₂))] /
+                        [L₁(2m₁+m₂ − m₂ cos(2θ₁ − 2θ₂))]
+                    </code><br />
+                    <code>
+                        dω₂/dt = [2 sin(θ₁−θ₂)(ω₁²L₁(m₁+m₂) + g(m₁+m₂)cosθ₁ + ω₂²L₂m₂ cos(θ₁−θ₂))] / [L₂(2m₁+m₂ − m₂
+                        cos(2θ₁ − 2θ₂))]
+                    </code>
+                </p>
+                <p class="text-zinc-300">
+                    Our implementation uses a simplified equal-mass, equal-length version numerically integrated each
+                    frame, with a trail showing the lower mass.
+                </p>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Robotics arms and linkages with multiple degrees of freedom.</li>
+                    <li>Any articulated mechanical system (cranes, manipulators) under fast motion.</li>
+                    <li>Reminder that even Newtonian systems can be practically unpredictable long term.</li>
+                </ul>
+            </section>
+
+            <!-- Bifurcation -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-indigo-300">Bifurcation Diagram</h3>
+                    <span class="info-chip">parameter scan · structure in chaos</span>
+                </div>
+                <p><strong>Idea:</strong> Instead of just simulating one value of r in the logistic map, we sweep r over
+                    a range and plot the long-term values of x for each r.</p>
+                <p class="mt-1 text-zinc-300">
+                    For each r:
+                </p>
+                <ol class="text-zinc-300">
+                    <li>Iterate <code>x<sub>n+1</sub> = r x<sub>n</sub>(1 − x<sub>n</sub>)</code> many times.</li>
+                    <li>Discard the transient steps.</li>
+                    <li>Plot the remaining x values vertically above that r.</li>
+                </ol>
+                <p class="text-zinc-300">
+                    The diagram shows:
+                </p>
+                <ul class="text-zinc-300">
+                    <li>Steady-state regions (single lines).</li>
+                    <li>Period-doubling: 1 → 2 → 4 → 8 branches.</li>
+                    <li>Chaotic region: dense “clouds” of x values.</li>
+                    <li>Windows of order: islands where cycles reappear inside chaos.</li>
+                </ul>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Tuning controller gains: map of “stable”, “oscillatory”, and “chaotic” behavior as parameters
+                        vary.</li>
+                    <li>Power electronics, converters, and drives: similar bifurcation diagrams appear experimentally.
+                    </li>
+                    <li>Gives you a mental model for how a small parameter change can reorganize the entire qualitative
+                        behavior of a system.</li>
+                </ul>
+            </section>
+
+            <section class="info-section">
+                <h3 class="text-zinc-200 mb-1">Link to engineering & your projects</h3>
+                <p class="text-zinc-300">
+                    Unit 1 taught you to see <strong>emergence in space</strong> (agents, grids, patterns).
+                    Unit 2 adds <strong>emergence in time</strong> under parameter changes.
+                </p>
+                <ul class="text-zinc-300">
+                    <li><strong>Digital twins / labs:</strong> non-linear effects in mechanical or electrical
+                        subsystems.</li>
+                    <li><strong>Log analytics:</strong> bifurcation-like transitions in system regimes
+                        (stable → oscillatory → chaotic logs).</li>
+                    <li><strong>Network analysis:</strong> traffic / load vs parameters (rate limits, retries, routing)
+                        could show similar “phase changes”.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    The big picture: when you see a complex time series in a plant, you can ask: “Is this a fixed point,
+                    limit cycle, or chaotic regime?” and choose diagnostics & control strategies accordingly.
+                </p>
+            </section>
+        </div>
+    </aside>
+
+    <!-- Lorenz p5.js sketch -->
+    <script>
+        (function () {
+            const lorenzSketch = (p) => {
+                let canvas, holder;
+                let points = [];
+                let x = 0.01,
+                    y = 0,
+                    z = 0;
+                const sigma = 10;
+                const rho = 28;
+                const beta = 8 / 3;
+                const dt = 0.01;
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("lorenz-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(60);
+                    p.colorMode(p.HSB, 360, 100, 100, 100);
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    // integrate several small steps per frame
+                    for (let i = 0; i < 5; i++) {
+                        const dx = sigma * (y - x);
+                        const dy = x * (rho - z) - y;
+                        const dz = x * y - beta * z;
+
+                        x += dx * dt;
+                        y += dy * dt;
+                        z += dz * dt;
+
+                        points.push({
+                            x,
+                            y,
+                            z
+                        });
+                        if (points.length > 4000) points.shift();
+                    }
+
+                    p.background(2, 10, 18);
+
+                    // auto scale
+                    let xmin = Infinity,
+                        xmax = -Infinity,
+                        ymin = Infinity,
+                        ymax = -Infinity;
+                    for (const pt of points) {
+                        xmin = Math.min(xmin, pt.x);
+                        xmax = Math.max(xmax, pt.x);
+                        ymin = Math.min(ymin, pt.z);
+                        ymax = Math.max(ymax, pt.z);
+                    }
+                    const margin = 20;
+                    const w = p.width - 2 * margin;
+                    const h = p.height - 2 * margin;
+
+                    p.noFill();
+                    p.beginShape();
+                    for (let i = 0; i < points.length; i++) {
+                        const pt = points[i];
+                        const nx = p.map(pt.x, xmin, xmax, margin, margin + w);
+                        const ny = p.map(pt.z, ymin, ymax, margin + h, margin);
+                        const hue = p.map(i, 0, points.length, 200, 320);
+                        p.stroke(hue, 75, 95, 80);
+                        p.vertex(nx, ny);
+                    }
+                    p.endShape();
+
+                    const grad = p.drawingContext.createLinearGradient(0, 0, 0, p.height);
+                    grad.addColorStop(0, "rgba(15,23,42,0.7)");
+                    grad.addColorStop(1, "rgba(15,23,42,0)");
+                    p.drawingContext.fillStyle = grad;
+                    p.noStroke();
+                    p.rect(0, 0, p.width, p.height);
+                };
+            };
+
+            new p5(lorenzSketch);
+        })();
+    </script>
+
+    <!-- Logistic map time-series sketch -->
+    <script>
+        (function () {
+            const logisticSketch = (p) => {
+                let canvas, holder;
+                let series = [];
+                let r = 3.8;
+                let x = 0.2;
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("logistic-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(45);
+
+                    // initialize series
+                    series = [];
+                    x = 0.2;
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    // update series
+                    for (let i = 0; i < 3; i++) {
+                        x = r * x * (1 - x);
+                        series.push(x);
+                        if (series.length > 400) series.shift();
+                    }
+
+                    p.background(4, 10, 18);
+
+                    // axes
+                    p.stroke(40, 60, 90);
+                    p.strokeWeight(1);
+                    const left = 40;
+                    const right = p.width - 10;
+                    const top = 20;
+                    const bottom = p.height - 30;
+                    p.line(left, bottom, right, bottom); // time axis
+                    p.line(left, top, left, bottom); // x axis
+
+                    // labels
+                    p.noStroke();
+                    p.fill(148, 163, 184);
+                    p.textSize(9);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.text("n (time step)", left + 4, bottom + 4);
+                    p.push();
+                    p.translate(12, (top + bottom) / 2);
+                    p.rotate(-p.HALF_PI);
+                    p.text("x", 0, 0);
+                    p.pop();
+
+                    // draw series
+                    if (series.length > 1) {
+                        p.noFill();
+                        p.stroke(34, 197, 94);
+                        p.strokeWeight(1.3);
+                        p.beginShape();
+                        const n = series.length;
+                        for (let i = 0; i < n; i++) {
+                            const t = p.map(i, 0, n - 1, left + 2, right - 2);
+                            const y = p.map(series[i], 0, 1, bottom - 2, top + 2);
+                            p.vertex(t, y);
+                        }
+                        p.endShape();
+                    }
+
+                    // horizontal lines at 0 and 1
+                    p.stroke(30, 64, 175, 120);
+                    p.strokeWeight(0.75);
+                    p.line(left, p.map(0, 0, 1, bottom - 2, top + 2), right, p.map(0, 0, 1, bottom - 2,
+                        top + 2));
+                    p.line(left, p.map(1, 0, 1, bottom - 2, top + 2), right, p.map(1, 0, 1, bottom - 2,
+                        top + 2));
+
+                    // HUD
+                    p.noStroke();
+                    p.fill(15, 23, 42, 220);
+                    p.rect(0, 0, 230, 38);
+                    p.fill(236, 252, 203);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text(`Logistic map · r = ${r.toFixed(3)}`, 8, 6);
+                    p.fill(148, 163, 184);
+                    p.textSize(9);
+                    p.text("xₙ₊₁ = r xₙ (1 − xₙ)   ·   0 ≤ x ≤ 1", 8, 20);
+                };
+            };
+
+            new p5(logisticSketch);
+        })();
+    </script>
+
+    <!-- Double pendulum sketch -->
+    <script>
+        (function () {
+            const pendulumSketch = (p) => {
+                let canvas, holder;
+
+                let a1 = Math.PI * 0.9;
+                let a2 = Math.PI * 0.7;
+                let a1_v = 0;
+                let a2_v = 0;
+                const g = 0.8;
+                const r1 = 80;
+                const r2 = 80;
+                const m1 = 1;
+                const m2 = 1;
+
+                let px2, py2; // previous tip position
+                let trail;
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    trail = p.createGraphics(p.width, p.height);
+                    trail.clear();
+                    px2 = undefined;
+                    py2 = undefined;
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("pendulum-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(60);
+
+                    trail = p.createGraphics(p.width, p.height);
+                    trail.clear();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    // equations from standard double pendulum (equal m, equal r)
+                    const num1 = -g * (2 * m1 + m2) * Math.sin(a1);
+                    const num2 = -m2 * g * Math.sin(a1 - 2 * a2);
+                    const num3 = -2 * Math.sin(a1 - a2) * m2;
+                    const num4 = a2_v * a2_v * r2 + a1_v * a1_v * r1 * Math.cos(a1 - a2);
+                    const den = r1 * (2 * m1 + m2 - m2 * Math.cos(2 * a1 - 2 * a2));
+                    const a1_a = (num1 + num2 + num3 * num4) / den;
+
+                    const num5 = 2 * Math.sin(a1 - a2);
+                    const num6 = (a1_v * a1_v * r1 * (m1 + m2));
+                    const num7 = g * (m1 + m2) * Math.cos(a1);
+                    const num8 = a2_v * a2_v * r2 * m2 * Math.cos(a1 - a2);
+                    const den2 = r2 * (2 * m1 + m2 - m2 * Math.cos(2 * a1 - 2 * a2));
+                    const a2_a = (num5 * (num6 + num7 + num8)) / den2;
+
+                    a1_v += a1_a;
+                    a2_v += a2_a;
+                    a1_v *= 0.999; // tiny damping
+                    a2_v *= 0.999;
+                    a1 += a1_v;
+                    a2 += a2_v;
+
+                    const originX = p.width / 2;
+                    const originY = 40;
+
+                    const x1 = originX + r1 * Math.sin(a1);
+                    const y1 = originY + r1 * Math.cos(a1);
+
+                    const x2 = x1 + r2 * Math.sin(a2);
+                    const y2 = y1 + r2 * Math.cos(a2);
+
+                    // draw trail on separate buffer
+                    trail.noStroke();
+                    trail.fill(244, 63, 94, 60);
+                    if (px2 !== undefined) {
+                        trail.stroke(244, 63, 94, 90);
+                        trail.strokeWeight(1.2);
+                        trail.line(px2, py2, x2, y2);
+                    }
+                    px2 = x2;
+                    py2 = y2;
+
+                    p.background(4, 6, 16);
+
+                    // gradient backdrop
+                    const grd = p.drawingContext.createLinearGradient(0, 0, p.width, p.height);
+                    grd.addColorStop(0, "rgba(30,64,175,0.8)");
+                    grd.addColorStop(1, "rgba(127,29,29,0.9)");
+                    p.drawingContext.fillStyle = grd;
+                    p.noStroke();
+                    p.rect(0, 0, p.width, p.height);
+
+                    // apply trail
+                    p.image(trail, 0, 0);
+
+                    // draw rods and masses
+                    p.stroke(248, 250, 252);
+                    p.strokeWeight(2);
+                    p.line(originX, originY, x1, y1);
+                    p.line(x1, y1, x2, y2);
+
+                    p.fill(248, 250, 252);
+                    p.noStroke();
+                    p.ellipse(originX, originY, 6, 6);
+
+                    p.fill(252, 165, 165);
+                    p.ellipse(x1, y1, 10, 10);
+                    p.fill(248, 113, 113);
+                    p.ellipse(x2, y2, 12, 12);
+
+                    // HUD
+                    p.noStroke();
+                    p.fill(15, 23, 42, 215);
+                    p.rect(0, 0, 240, 40);
+                    p.fill(254, 242, 242);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text("Double Pendulum", 8, 6);
+                    p.fill(248, 187, 208);
+                    p.textSize(9);
+                    p.text("Tiny changes in start → huge differences in path", 8, 20);
+                };
+            };
+
+            new p5(pendulumSketch);
+        })();
+    </script>
+
+    <!-- Bifurcation diagram sketch -->
+    <script>
+        (function () {
+            const bifSketch = (p) => {
+                let canvas, holder;
+                let buffer;
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    buffer = null;
+                }
+
+                function generateDiagram() {
+                    buffer = p.createGraphics(p.width, p.height);
+                    buffer.background(4, 6, 20);
+
+                    const rMin = 2.5;
+                    const rMax = 4.0;
+
+                    const stepsR = Math.floor(p.width * 0.9);
+                    const iters = 600;
+                    const keep = 250;
+
+                    buffer.stroke(129, 140, 248, 180);
+                    buffer.strokeWeight(1);
+
+                    for (let i = 0; i < stepsR; i++) {
+                        const r = p.map(i, 0, stepsR - 1, rMin, rMax);
+                        let x = 0.5;
+                        for (let n = 0; n < iters; n++) {
+                            x = r * x * (1 - x);
+                            if (n > iters - keep) {
+                                const px = p.map(i, 0, stepsR - 1, 20, p.width - 10);
+                                const py = p.map(x, 0, 1, p.height - 20, 20);
+                                buffer.point(px, py);
+                            }
+                        }
+                    }
+
+                    // axes overlays
+                    buffer.noStroke();
+                    buffer.fill(15, 23, 42, 230);
+                    buffer.rect(0, 0, p.width, 32);
+                    buffer.rect(0, p.height - 26, p.width, 26);
+
+                    buffer.fill(226, 232, 240);
+                    buffer.textAlign(p.LEFT, p.TOP);
+                    buffer.textSize(10);
+                    buffer.text("Logistic map bifurcation diagram", 8, 6);
+
+                    buffer.fill(148, 163, 184);
+                    buffer.textSize(9);
+                    buffer.text("2.5 ≤ r ≤ 4.0   ·   steady-state x for each r", 8, 18);
+
+                    buffer.fill(148, 163, 184);
+                    buffer.textAlign(p.CENTER, p.BOTTOM);
+                    buffer.text("r", p.width / 2, p.height - 4);
+
+                    buffer.push();
+                    buffer.translate(10, p.height / 2);
+                    buffer.rotate(-p.HALF_PI);
+                    buffer.textAlign(p.CENTER, p.TOP);
+                    buffer.text("x", 0, 0);
+                    buffer.pop();
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("bif-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(30);
+                    generateDiagram();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                    generateDiagram();
+                };
+
+                p.draw = () => {
+                    if (buffer) {
+                        p.image(buffer, 0, 0);
+                    }
+                };
+            };
+
+            new p5(bifSketch);
+        })();
+    </script>
+
+    <!-- Sidebar JS -->
+    <script>
+        (function () {
+            const body = document.body;
+            const toggleBtn = document.getElementById('info-toggle');
+            const closeBtn = document.getElementById('info-close');
+            const overlay = document.getElementById('info-overlay');
+
+            function toggleSidebar(force) {
+                const shouldOpen = typeof force === 'boolean' ? force : !body.classList.contains('sidebar-open');
+                if (shouldOpen) {
+                    body.classList.add('sidebar-open');
+                } else {
+                    body.classList.remove('sidebar-open');
+                }
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => toggleSidebar());
+            }
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => toggleSidebar(false));
+            }
+            if (overlay) {
+                overlay.addEventListener('click', () => toggleSidebar(false));
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    toggleSidebar(false);
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>

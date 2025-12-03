@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Complex Systems Lab · Unit 3 · Swarm Intelligence</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background: #050509;
+            color: #f4f4f5;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(10px);
+            background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.18), transparent),
+                rgba(9, 9, 11, 0.96);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.9);
+        }
+
+        .sketch-card {
+            border-radius: 1.25rem;
+            border: 1px solid #27272a;
+            background: radial-gradient(circle at top, rgba(16, 185, 129, 0.08), transparent 55%),
+                rgba(15, 15, 19, 0.98);
+            box-shadow:
+                0 18px 45px rgba(0, 0, 0, 0.7),
+                0 0 24px rgba(16, 185, 129, 0.16);
+        }
+
+        .sketch-holder {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            border-radius: 0.9rem;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #020617, #020617 35%, #020617);
+        }
+
+        .pill {
+            border-radius: 999px;
+            border: 1px solid rgba(161, 161, 170, 0.4);
+            padding: 0.15rem 0.6rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #a1a1aa;
+        }
+
+        .badge-live {
+            border-radius: 999px;
+            padding: 0.2rem 0.65rem;
+            font-size: 0.7rem;
+            background: rgba(16, 185, 129, 0.2);
+            color: #bbf7d0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .badge-live span {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
+        }
+
+        /* Sidebar + toggle */
+        .sidebar-toggle {
+            position: fixed;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            z-index: 40;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(52, 211, 153, 0.7);
+            background: radial-gradient(circle at 30% 20%, rgba(16, 185, 129, 0.4), transparent),
+                rgba(15, 23, 42, 0.96);
+            box-shadow:
+                0 0 18px rgba(16, 185, 129, 0.7),
+                0 0 40px rgba(16, 185, 129, 0.4);
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .sidebar-toggle span {
+            display: block;
+            font-size: 1.35rem;
+            line-height: 1;
+            color: #bbf7d0;
+        }
+
+        .sidebar-toggle:hover {
+            transform: translateY(-1px) scale(1.03);
+            box-shadow:
+                0 0 22px rgba(16, 185, 129, 0.9),
+                0 0 55px rgba(16, 185, 129, 0.45);
+        }
+
+        .info-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            width: min(440px, 100%);
+            background: radial-gradient(circle at top, rgba(16, 185, 129, 0.16), transparent 55%),
+                #020617;
+            border-left: 1px solid rgba(16, 185, 129, 0.4);
+            box-shadow: -18px 0 40px rgba(0, 0, 0, 0.85);
+            z-index: 50;
+            transform: translateX(100%);
+            transition: transform 0.25s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-sidebar-header {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid rgba(39, 39, 42, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            background: rgba(2, 6, 23, 0.96);
+        }
+
+        .info-sidebar-body {
+            padding: 0.75rem 1.2rem 1.2rem;
+            overflow-y: auto;
+            font-size: 0.78rem;
+        }
+
+        .info-section {
+            border-radius: 0.85rem;
+            padding: 0.65rem 0.75rem 0.8rem;
+            margin-bottom: 0.75rem;
+            background: rgba(12, 10, 26, 0.97);
+            border: 1px solid rgba(39, 39, 42, 0.9);
+        }
+
+        .info-section h3 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0 0 0.25rem;
+        }
+
+        .info-section p {
+            margin: 0.12rem 0;
+        }
+
+        .info-section code {
+            font-size: 0.7rem;
+            padding: 0.12rem 0.25rem;
+            border-radius: 0.25rem;
+            background: rgba(24, 24, 27, 0.9);
+        }
+
+        .info-section ul {
+            margin: 0.25rem 0 0.3rem 0.95rem;
+            padding: 0;
+        }
+
+        .info-section li {
+            margin-bottom: 0.15rem;
+        }
+
+        .info-chip {
+            font-size: 0.65rem;
+            border-radius: 999px;
+            padding: 0.1rem 0.45rem;
+            border: 1px solid rgba(148, 163, 184, 0.8);
+            color: #e5e7eb;
+        }
+
+        .info-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(16, 185, 129, 0.06), transparent 60%),
+                rgba(2, 6, 23, 0.88);
+            z-index: 45;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-out;
+        }
+
+        body.sidebar-open .info-sidebar {
+            transform: translateX(0);
+        }
+
+        body.sidebar-open .info-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top bar -->
+    <header class="top-bar">
+        <div class="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <a href="ComplexSystemsHub.html"
+                    class="inline-flex items-center gap-1 rounded-full border border-zinc-700/80 px-3 py-1 text-xs text-zinc-200 hover:border-emerald-400/80 hover:text-emerald-200 transition">
+                    ← Back to Complex Systems Hub
+                </a>
+                <div class="pill">Complex Systems Lab · Unit 3</div>
+            </div>
+            <div class="badge-live">
+                <span></span>
+                swarm intelligence & collective behaviour
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 pt-6 pb-16 space-y-8">
+        <!-- Intro -->
+        <section class="space-y-2">
+            <h1 class="text-xl md:text-2xl font-semibold tracking-tight">
+                Swarms, Trails & Collective Decisions
+            </h1>
+            <p class="text-sm text-zinc-400 max-w-2xl">
+                This unit focuses on <span class="text-emerald-300">multi-agent intelligence</span>:
+                many simple agents with very limited local rules cooperating to solve problems:
+                <span class="text-amber-300">Ant Colony</span> pathfinding, <span class="text-lime-300">Slime
+                    Mold</span>
+                networks, <span class="text-sky-300">Particle Swarm Optimization</span>, and
+                <span class="text-fuchsia-300">Firefly synchronization</span>.
+            </p>
+        </section>
+
+        <!-- Grid of topics -->
+        <section class="grid gap-6 md:grid-cols-2">
+            <!-- Ant Colony -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-amber-200">
+                            Ant Colony · Shortest Path
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Ants wander between nest and food, reinforcing good paths with pheromones.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Mechanism</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">pheromone trail</span>
+                            <span class="pill">evaporation</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ants-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Watch trails appear on the shorter path. 🐜</span>
+                    <span>Reinforcement + evaporation = emergent routing.</span>
+                </div>
+            </article>
+
+            <!-- Slime Mold -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-lime-200">
+                            Slime Mold · Trail Network
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Agents follow and deposit chemical trails, building efficient paths between sources.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Behavior</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">chemo-taxis</span>
+                            <span class="pill">trail decay</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="slime-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Agents carve filament networks. 🌿</span>
+                    <span>Think “organism solving transport layout”.</span>
+                </div>
+            </article>
+
+            <!-- Particle Swarm Optimization -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-sky-200">
+                            Particle Swarm Optimization · PSO
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Particles search a landscape, attracted to their own best and the swarm's best.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Search</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">v<sub>inertia</sub> + v<sub>cognitive</sub> + v<sub>social</sub></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pso-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>Particles converge to a minimum. 🎯</span>
+                    <span>Swarm-style optimization algorithm.</span>
+                </div>
+            </article>
+
+            <!-- Firefly Synchronization -->
+            <article class="sketch-card p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-fuchsia-200">
+                            Firefly Synchronization · Pulse Coupling
+                        </h2>
+                        <p class="text-xs text-zinc-400">
+                            Oscillators blink; seeing neighbors flash slightly resets their phase → sync.
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Phenomenon</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="pill">phase coupling</span>
+                            <span class="pill">consensus</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="fireflies-holder" class="sketch-holder"></div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+                    <span>At first: random blinks. Later: global rhythm. ✨</span>
+                    <span>Consensus from local interactions.</span>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <!-- Overlay & Sidebar toggle -->
+    <div id="info-overlay" class="info-overlay"></div>
+
+    <button id="info-toggle" class="sidebar-toggle" aria-label="Open system explanations">
+        <span>+</span>
+    </button>
+
+    <!-- Info Sidebar -->
+    <aside id="info-sidebar" class="info-sidebar" aria-label="Simulation explanations">
+        <div class="info-sidebar-header">
+            <div class="flex flex-col">
+                <span class="text-xs font-semibold text-emerald-300 tracking-wide uppercase">
+                    Unit 3 · Swarm Intelligence
+                </span>
+                <span class="text-[0.72rem] text-zinc-400">
+                    Local rules, collective problem-solving & how this maps to routing, networks & control.
+                </span>
+            </div>
+            <button id="info-close"
+                class="inline-flex items-center justify-center rounded-full border border-zinc-700/70 text-xs text-zinc-200 w-7 h-7 hover:border-emerald-400/70 hover:text-emerald-200 transition"
+                aria-label="Close">
+                ✕
+            </button>
+        </div>
+        <div class="info-sidebar-body">
+            <!-- Ant Colony -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-amber-300">Ant Colony · Shortest Path</h3>
+                    <span class="info-chip">stochastic routing · pheromone</span>
+                </div>
+                <p><strong>Idea:</strong> Ants randomly explore paths from nest to food. When they find food, they
+                    return
+                    and deposit pheromone. Others are more likely to follow stronger trails. Pheromone evaporates over
+                    time.</p>
+                <p class="mt-1 text-zinc-300">
+                    For an ant choosing between edges i with pheromone level <code>τᵢ</code> and length <code>Lᵢ</code>,
+                    the probability to choose edge i is often modeled as:
+                </p>
+                <p class="text-zinc-200">
+                    <code>Pᵢ = (τᵢ^α · (1 / Lᵢ)^β) / Σⱼ τⱼ^α · (1 / Lⱼ)^β</code>
+                </p>
+                <ul class="text-zinc-300">
+                    <li><code>α</code> – how strongly ants follow pheromone.</li>
+                    <li><code>β</code> – how strongly they prefer shorter paths.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    Pheromone is updated as:
+                </p>
+                <p class="text-zinc-200">
+                    <code>τᵢ ← (1 − ρ) τᵢ + Δτᵢ</code> &nbsp;&nbsp; (ρ = evaporation rate)
+                </p>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Routing in communication networks (ant-based routing, load balancing).</li>
+                    <li>Vehicle routing, logistics, traveling salesman approximations.</li>
+                    <li>Decentralized decision systems where many agents explore & reinforce good solutions.</li>
+                </ul>
+            </section>
+
+            <!-- Slime Mold -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-lime-300">Slime Mold · Trail Networks</h3>
+                    <span class="info-chip">transport efficiency · emergent graphs</span>
+                </div>
+                <p><strong>Idea:</strong> Physarum slime mold grows tube-like networks between food sources. Tubes with
+                    higher flow get reinforced; others shrink → the organism approximates efficient transport networks.
+                </p>
+                <p class="mt-1 text-zinc-300">
+                    A simple agent-based abstraction:
+                </p>
+                <ul class="text-zinc-300">
+                    <li>Agents move forward with some heading.</li>
+                    <li>They “smell” a chemoattractant ahead/left/right in a small sensor radius.</li>
+                    <li>Turn towards the strongest sensed trail and move; deposit trail along their path.</li>
+                    <li>Trail diffuses + evaporates over time.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    Let trail field be <code>C(x,y)</code>. At each step:
+                </p>
+                <p class="text-zinc-200">
+                    <code>C ← (1 − d)C + diffusion(C) + deposits</code>
+                </p>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Designing road, rail, or pipeline networks under cost + robustness constraints.</li>
+                    <li>Network design where redundancy vs efficiency needs to self-balance.</li>
+                    <li>Cool mental model for Network topologies “growing” under flow constraints.</li>
+                </ul>
+            </section>
+
+            <!-- PSO -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-sky-300">Particle Swarm Optimization (PSO)</h3>
+                    <span class="info-chip">swarm search · continuous optimization</span>
+                </div>
+                <p><strong>Idea:</strong> Each particle represents a candidate solution in a continuous search space. It
+                    remembers its own best position and is influenced by the global best found by the swarm.</p>
+                <p class="mt-1 text-zinc-300">
+                    For each particle i with position <code>xᵢ</code>, velocity <code>vᵢ</code>, personal best
+                    <code>pbestᵢ</code>, and global best <code>gbest</code>:
+                </p>
+                <p class="text-zinc-200">
+                    <code>vᵢ ← ω vᵢ + c₁ r₁ (pbestᵢ − xᵢ) + c₂ r₂ (gbest − xᵢ)</code><br />
+                    <code>xᵢ ← xᵢ + vᵢ</code>
+                </p>
+                <ul class="text-zinc-300">
+                    <li><code>ω</code> – inertia (keeps motion smooth).</li>
+                    <li><code>c₁, c₂</code> – cognitive & social coefficients.</li>
+                    <li><code>r₁, r₂</code> – random numbers in [0, 1] for exploration.</li>
+                </ul>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Parameter tuning in controllers (PID gains, filter parameters, etc.).</li>
+                    <li>Engineering design optimization (shapes, materials, multi-objective tradeoffs).</li>
+                    <li>Configuration search for networks & plants where gradients are not easily available.</li>
+                </ul>
+            </section>
+
+            <!-- Fireflies -->
+            <section class="info-section">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-fuchsia-300">Firefly Synchronization</h3>
+                    <span class="info-chip">phase sync · consensus</span>
+                </div>
+                <p><strong>Idea:</strong> Each firefly is a simple oscillator with phase
+                    <code>θᵢ(t)</code>. When it reaches a threshold, it “flashes” and resets. If it sees neighbors
+                    flash,
+                    it slightly shifts its own phase. Over time, the whole group synchronizes.</p>
+                <p class="mt-1 text-zinc-300">
+                    Simple model (pulse-coupled oscillators):
+                </p>
+                <ul class="text-zinc-300">
+                    <li>Between flashes: <code>dθᵢ/dt = ω</code> (constant rate).</li>
+                    <li>If <code>θᵢ ≥ 1</code>, firefly i flashes → <code>θᵢ ← 0</code>.</li>
+                    <li>If i sees a neighbor flash, shift: <code>θᵢ ← θᵢ + ε(1 − θᵢ)</code> (pulled slightly forward).
+                    </li>
+                </ul>
+                <p class="mt-1 text-zinc-300"><strong>Real-world links:</strong></p>
+                <ul class="text-zinc-300">
+                    <li>Clock synchronization in distributed systems and sensor networks.</li>
+                    <li>Grid frequency synchronization, phase-locked loops.</li>
+                    <li>Collective timing in biology: neurons, circadian rhythms, heart pacemaker cells.</li>
+                </ul>
+            </section>
+
+            <section class="info-section">
+                <h3 class="text-zinc-200 mb-1">How this maps to your stuff</h3>
+                <p class="text-zinc-300">
+                    Unit 3 is basically a toolkit for how to make
+                    <strong>many dumb things behave smart as a group</strong>.
+                </p>
+                <ul class="text-zinc-300">
+                    <li><strong>Networking:</strong> ant-like routing, slime-mold layout, PSO tuning of policies.
+                    </li>
+                    <li><strong>Log analysis:</strong> think “ants” as diagnostics exploring log patterns or parameter
+                        combinations.</li>
+                    <li><strong>Monitoring tools:</strong> flocks, path networks, and synchronized devices as visual
+                        metaphors for system health and coordination.</li>
+                </ul>
+                <p class="text-zinc-300">
+                    The mental move is: whenever you see a messy search or routing problem, ask:
+                    “Can I turn this into a swarm that explores, reinforces good paths, and forgets bad ones?”
+                </p>
+            </section>
+        </div>
+    </aside>
+
+    <!-- Ant Colony p5.js -->
+    <script>
+        (function () {
+            const antsSketch = (p) => {
+                let canvas, holder;
+                let pheromone;
+                let ants = [];
+                const ANT_COUNT = 80;
+                let nest, food1, food2;
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    initField();
+                }
+
+                function initField() {
+                    pheromone = p.createGraphics(p.width, p.height);
+                    pheromone.clear();
+
+                    nest = p.createVector(p.width * 0.18, p.height * 0.5);
+                    food1 = p.createVector(p.width * 0.82, p.height * 0.35); // short path
+                    food2 = p.createVector(p.width * 0.82, p.height * 0.65); // longer path
+
+                    ants = [];
+                    for (let i = 0; i < ANT_COUNT; i++) {
+                        ants.push(new Ant(nest.x + p.random(-5, 5), nest.y + p.random(-5, 5)));
+                    }
+                }
+
+                class Ant {
+                    constructor(x, y) {
+                        this.pos = p.createVector(x, y);
+                        this.vel = p5.Vector.fromAngle(p.random(p.TWO_PI));
+                        this.state = "searchFood"; // or "returnNest"
+                        this.hasFood = false;
+                        this.path = [];
+                    }
+
+                    sense(directionAngle) {
+                        const sensorDistance = 10;
+                        const sensorOffset = 0.4;
+                        const angle = this.vel.heading() + directionAngle * sensorOffset;
+                        const dir = p5.Vector.fromAngle(angle).setMag(sensorDistance);
+                        const sx = p.constrain(this.pos.x + dir.x, 0, p.width - 1);
+                        const sy = p.constrain(this.pos.y + dir.y, 0, p.height - 1);
+                        const c = pheromone.get(sx, sy);
+                        // c is [r,g,b,a]; use brightness as pheromone intensity
+                        return (c[0] + c[1] + c[2]) / 3;
+                    }
+
+                    update() {
+                        // choose target: state determines bias
+                        let target = this.state === "searchFood" ? (p.random() < 0.5 ? food1 : food2) :
+                            nest;
+
+                        // pheromone sensing (ahead, left, right)
+                        const ahead = this.sense(0);
+                        const left = this.sense(-1);
+                        const right = this.sense(1);
+
+                        if (ahead < left || ahead < right) {
+                            if (left > right) {
+                                this.vel.rotate(-0.3);
+                            } else {
+                                this.vel.rotate(0.3);
+                            }
+                        } else {
+                            // small random jitter
+                            this.vel.rotate(p.random(-0.1, 0.1));
+                        }
+
+                        // slight drift toward target
+                        const toTarget = p5.Vector.sub(target, this.pos).setMag(0.03);
+                        this.vel.add(toTarget);
+                        this.vel.setMag(1.4);
+
+                        this.pos.add(this.vel);
+                        this.wrapEdges();
+
+                        // store path for pheromone deposition
+                        this.path.push(this.pos.copy());
+                        if (this.path.length > 80) this.path.shift();
+
+                        // state transitions
+                        if (this.state === "searchFood") {
+                            if (p5.Vector.dist(this.pos, food1) < 10 || p5.Vector.dist(this.pos, food2) <
+                                10) {
+                                this.state = "returnNest";
+                                this.hasFood = true;
+                            }
+                        } else {
+                            if (p5.Vector.dist(this.pos, nest) < 10) {
+                                this.state = "searchFood";
+                                this.hasFood = false;
+                                this.path = [];
+                            }
+                        }
+
+                        // deposit pheromone when returning with food
+                        if (this.hasFood && this.path.length > 1) {
+                            pheromone.stroke(234, 179, 8, 90);
+                            pheromone.strokeWeight(1);
+                            const last = this.path[this.path.length - 2];
+                            const curr = this.path[this.path.length - 1];
+                            pheromone.line(last.x, last.y, curr.x, curr.y);
+                        }
+                    }
+
+                    wrapEdges() {
+                        if (this.pos.x < 0) this.pos.x = p.width - 1;
+                        if (this.pos.x >= p.width) this.pos.x = 0;
+                        if (this.pos.y < 0) this.pos.y = p.height - 1;
+                        if (this.pos.y >= p.height) this.pos.y = 0;
+                    }
+
+                    show() {
+                        p.push();
+                        p.translate(this.pos.x, this.pos.y);
+                        const angle = this.vel.heading();
+                        p.rotate(angle);
+                        if (this.hasFood) {
+                            p.fill(250, 204, 21);
+                        } else {
+                            p.fill(241, 245, 249);
+                        }
+                        p.noStroke();
+                        p.ellipse(0, 0, 3.5, 3.5);
+                        p.pop();
+                    }
+                }
+
+                function evaporatePheromone() {
+                    pheromone.loadPixels();
+                    for (let i = 0; i < pheromone.pixels.length; i += 4) {
+                        pheromone.pixels[i] *= 0.985; // R
+                        pheromone.pixels[i + 1] *= 0.985; // G
+                        pheromone.pixels[i + 2] *= 0.985; // B
+                    }
+                    pheromone.updatePixels();
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("ants-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(45);
+                    initField();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    evaporatePheromone();
+
+                    p.background(7, 10, 20);
+
+                    // paths background
+                    p.image(pheromone, 0, 0);
+
+                    for (let ant of ants) {
+                        ant.update();
+                    }
+
+                    // draw ants on top
+                    for (let ant of ants) {
+                        ant.show();
+                    }
+
+                    // draw nest and food
+                    p.noStroke();
+                    p.fill(52, 211, 153);
+                    p.ellipse(nest.x, nest.y, 10, 10);
+                    p.fill(251, 191, 36);
+                    p.ellipse(food1.x, food1.y, 9, 9);
+                    p.ellipse(food2.x, food2.y, 9, 9);
+
+                    // HUD
+                    p.noStroke();
+                    p.fill(15, 23, 42, 220);
+                    p.rect(0, 0, 240, 38);
+                    p.fill(254, 249, 195);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text("Ant Colony · emergent shortest path", 8, 6);
+                    p.fill(148, 163, 184);
+                    p.textSize(9);
+                    p.text("Trails grow stronger on faster routes", 8, 20);
+                };
+            };
+
+            new p5(antsSketch);
+        })();
+    </script>
+
+    <!-- Slime Mold p5.js -->
+    <script>
+        (function () {
+            const slimeSketch = (p) => {
+                let canvas, holder;
+                let trail;
+                let agents = [];
+                const AGENT_COUNT = 700;
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    initField();
+                }
+
+                function initField() {
+                    trail = p.createGraphics(p.width, p.height);
+                    trail.background(0);
+                    trail.clear();
+
+                    agents = [];
+                    for (let i = 0; i < AGENT_COUNT; i++) {
+                        const angle = p.random(p.TWO_PI);
+                        const radius = p.random(p.width * 0.15, p.width * 0.35);
+                        const cx = p.width / 2;
+                        const cy = p.height / 2;
+                        const x = cx + radius * Math.cos(angle);
+                        const y = cy + radius * Math.sin(angle);
+                        agents.push(new SlimeAgent(x, y));
+                    }
+                }
+
+                class SlimeAgent {
+                    constructor(x, y) {
+                        this.pos = p.createVector(x, y);
+                        this.angle = p.random(p.TWO_PI);
+                    }
+
+                    sense(offsetAngle) {
+                        const sensorDistance = 7;
+                        const sensorAngle = this.angle + offsetAngle;
+                        const sx = this.pos.x + Math.cos(sensorAngle) * sensorDistance;
+                        const sy = this.pos.y + Math.sin(sensorAngle) * sensorDistance;
+                        if (sx < 0 || sx >= p.width || sy < 0 || sy >= p.height) return 0;
+                        const c = trail.get(sx, sy);
+                        return (c[1]); // green channel as intensity
+                    }
+
+                    update() {
+                        const senseLeft = this.sense(-0.4);
+                        const senseForward = this.sense(0);
+                        const senseRight = this.sense(0.4);
+
+                        if (senseForward >= senseLeft && senseForward >= senseRight) {
+                            // keep direction
+                        } else if (senseLeft > senseRight) {
+                            this.angle -= 0.3;
+                        } else if (senseRight > senseLeft) {
+                            this.angle += 0.3;
+                        } else {
+                            this.angle += p.random(-0.2, 0.2);
+                        }
+
+                        const speed = 1.3;
+                        this.pos.x += Math.cos(this.angle) * speed;
+                        this.pos.y += Math.sin(this.angle) * speed;
+
+                        if (this.pos.x < 0) this.pos.x = p.width - 1;
+                        if (this.pos.x >= p.width) this.pos.x = 0;
+                        if (this.pos.y < 0) this.pos.y = p.height - 1;
+                        if (this.pos.y >= p.height) this.pos.y = 0;
+
+                        trail.noStroke();
+                        trail.fill(190, 255, 120, 80);
+                        trail.ellipse(this.pos.x, this.pos.y, 1.3, 1.3);
+                    }
+                }
+
+                function evaporateTrail() {
+                    trail.loadPixels();
+                    for (let i = 0; i < trail.pixels.length; i += 4) {
+                        trail.pixels[i] *= 0.99;
+                        trail.pixels[i + 1] *= 0.985; // main channel
+                        trail.pixels[i + 2] *= 0.99;
+                        trail.pixels[i + 3] *= 0.995;
+                    }
+                    trail.updatePixels();
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("slime-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(50);
+                    initField();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    evaporateTrail();
+
+                    for (let a of agents) {
+                        a.update();
+                    }
+
+                    p.background(3, 7, 13);
+                    p.image(trail, 0, 0);
+
+                    // HUD
+                    p.noStroke();
+                    p.fill(15, 23, 42, 220);
+                    p.rect(0, 0, 245, 38);
+                    p.fill(236, 252, 203);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text("Slime Mold-style trail network", 8, 6);
+                    p.fill(190, 242, 100);
+                    p.textSize(9);
+                    p.text("Agents follow & reinforce trails → filaments", 8, 20);
+                };
+            };
+
+            new p5(slimeSketch);
+        })();
+    </script>
+
+    <!-- PSO p5.js -->
+    <script>
+        (function () {
+            const psoSketch = (p) => {
+                let canvas, holder;
+                let particles = [];
+                const PARTICLE_COUNT = 60;
+
+                let gbestPos;
+                let gbestVal;
+
+                function f(x, y) {
+                    // simple multimodal function
+                    const nx = (x / p.width - 0.5) * 4;
+                    const ny = (y / p.height - 0.5) * 4;
+                    const r = Math.sqrt(nx * nx + ny * ny) + 0.0001;
+                    return Math.sin(3 * nx) * Math.cos(3 * ny) / r - 0.3 * (nx * nx + ny * ny);
+                }
+
+                class Particle {
+                    constructor() {
+                        this.pos = p.createVector(p.random(p.width), p.random(p.height));
+                        this.vel = p.createVector(p.random(-2, 2), p.random(-2, 2));
+                        this.pbestPos = this.pos.copy();
+                        this.pbestVal = f(this.pos.x, this.pos.y);
+                    }
+
+                    update() {
+                        const val = f(this.pos.x, this.pos.y);
+                        if (val > this.pbestVal) {
+                            this.pbestVal = val;
+                            this.pbestPos = this.pos.copy();
+                        }
+                        if (val > gbestVal) {
+                            gbestVal = val;
+                            gbestPos = this.pos.copy();
+                        }
+
+                        const w = 0.7;
+                        const c1 = 1.4;
+                        const c2 = 1.4;
+                        const r1 = Math.random();
+                        const r2 = Math.random();
+
+                        const cognitive = p5.Vector.sub(this.pbestPos, this.pos).mult(c1 * r1);
+                        const social = p5.Vector.sub(gbestPos, this.pos).mult(c2 * r2);
+
+                        this.vel.mult(w);
+                        this.vel.add(cognitive);
+                        this.vel.add(social);
+                        this.vel.limit(4);
+
+                        this.pos.add(this.vel);
+
+                        if (this.pos.x < 0) this.pos.x = 0;
+                        if (this.pos.x > p.width) this.pos.x = p.width;
+                        if (this.pos.y < 0) this.pos.y = 0;
+                        if (this.pos.y > p.height) this.pos.y = p.height;
+                    }
+
+                    show() {
+                        p.noStroke();
+                        const intensity = p.map(this.pbestVal, -4, 2, 0, 1);
+                        const col = p.lerpColor(
+                            p.color(59, 130, 246),
+                            p.color(56, 189, 248),
+                            p.constrain(intensity, 0, 1)
+                        );
+                        p.fill(col);
+                        p.ellipse(this.pos.x, this.pos.y, 6, 6);
+                    }
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    initSwarm();
+                }
+
+                function initSwarm() {
+                    particles = [];
+                    for (let i = 0; i < PARTICLE_COUNT; i++) {
+                        particles.push(new Particle());
+                    }
+                    gbestPos = particles[0].pos.copy();
+                    gbestVal = f(gbestPos.x, gbestPos.y);
+                }
+
+                function drawLandscape() {
+                    const step = 4;
+                    for (let x = 0; x < p.width; x += step) {
+                        for (let y = 0; y < p.height; y += step) {
+                            const val = f(x, y);
+                            const norm = p.constrain(p.map(val, -4, 2, 0, 1), 0, 1);
+                            const c = p.lerpColor(
+                                p.color(15, 23, 42),
+                                p.color(56, 189, 248),
+                                norm
+                            );
+                            p.noStroke();
+                            p.fill(c);
+                            p.rect(x, y, step, step);
+                        }
+                    }
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("pso-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(45);
+                    initSwarm();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    drawLandscape();
+
+                    for (let pt of particles) {
+                        pt.update();
+                    }
+
+                    for (let pt of particles) {
+                        pt.show();
+                    }
+
+                    // mark global best
+                    p.noFill();
+                    p.stroke(248, 250, 252);
+                    p.strokeWeight(1.4);
+                    p.ellipse(gbestPos.x, gbestPos.y, 14, 14);
+
+                    // HUD
+                    p.noStroke();
+                    p.fill(15, 23, 42, 220);
+                    p.rect(0, 0, 260, 38);
+                    p.fill(224, 242, 254);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text("PSO · swarm finding a minimum", 8, 6);
+                    p.fill(148, 163, 184);
+                    p.textSize(9);
+                    p.text(`gbest ≈ ${gbestVal.toFixed(2)}`, 8, 20);
+                };
+            };
+
+            new p5(psoSketch);
+        })();
+    </script>
+
+    <!-- Fireflies p5.js -->
+    <script>
+        (function () {
+            const fireflySketch = (p) => {
+                let canvas, holder;
+                let fireflies = [];
+                const COUNT = 80;
+                const COUPLING = 0.1;
+
+                class Firefly {
+                    constructor(x, y) {
+                        this.pos = p.createVector(x, y);
+                        this.phase = Math.random(); // 0..1
+                        this.omega = 0.01 + Math.random() * 0.004;
+                        this.justFlashed = false;
+                    }
+
+                    step() {
+                        this.justFlashed = false;
+                        this.phase += this.omega;
+                        if (this.phase >= 1) {
+                            this.phase = 0;
+                            this.justFlashed = true;
+                        }
+                    }
+
+                    nudge() {
+                        // move phase slightly towards flashing
+                        this.phase += COUPLING * (1 - this.phase);
+                        if (this.phase > 1) this.phase = 1;
+                    }
+
+                    brightness() {
+                        if (this.phase > 0.95) {
+                            return p.map(this.phase, 0.95, 1, 0.4, 1.0);
+                        }
+                        return 0.15;
+                    }
+
+                    show() {
+                        const b = this.brightness();
+                        const col = p.lerpColor(
+                            p.color(24, 24, 27),
+                            p.color(244, 114, 182),
+                            b
+                        );
+                        p.noStroke();
+                        p.fill(col);
+                        p.ellipse(this.pos.x, this.pos.y, 6 + b * 4, 6 + b * 4);
+                    }
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    p.resizeCanvas(w, h);
+                    initFireflies();
+                }
+
+                function initFireflies() {
+                    fireflies = [];
+                    for (let i = 0; i < COUNT; i++) {
+                        const margin = 20;
+                        const x = p.random(margin, p.width - margin);
+                        const y = p.random(margin, p.height - margin);
+                        fireflies.push(new Firefly(x, y));
+                    }
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("fireflies-holder");
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 260;
+                    canvas = p.createCanvas(w, h);
+                    canvas.parent(holder);
+                    p.frameRate(50);
+                    initFireflies();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    p.background(10, 6, 20);
+
+                    // soft background glow
+                    const grad = p.drawingContext.createRadialGradient(
+                        p.width / 2, p.height / 2, 10,
+                        p.width / 2, p.height / 2, Math.max(p.width, p.height)
+                    );
+                    grad.addColorStop(0, "rgba(76,29,149,0.5)");
+                    grad.addColorStop(1, "rgba(15,23,42,1)");
+                    p.drawingContext.fillStyle = grad;
+                    p.noStroke();
+                    p.rect(0, 0, p.width, p.height);
+
+                    // update phases
+                    for (let f of fireflies) {
+                        f.step();
+                    }
+
+                    // coupling: if a firefly flashed, nudge nearby ones
+                    for (let i = 0; i < fireflies.length; i++) {
+                        if (!fireflies[i].justFlashed) continue;
+                        for (let j = 0; j < fireflies.length; j++) {
+                            if (i === j) return;
+                            const d = p5.Vector.dist(fireflies[i].pos, fireflies[j].pos);
+                            if (d < 60) {
+                                fireflies[j].nudge();
+                            }
+                        }
+                    }
+
+                    for (let f of fireflies) {
+                        f.show();
+                    }
+
+                    // HUD
+                    p.noStroke();
+                    p.fill(15, 23, 42, 220);
+                    p.rect(0, 0, 260, 38);
+                    p.fill(252, 231, 243);
+                    p.textAlign(p.LEFT, p.TOP);
+                    p.textSize(10);
+                    p.text("Firefly synchronization", 8, 6);
+                    p.fill(244, 174, 208);
+                    p.textSize(9);
+                    p.text("Local phase nudges → global rhythm", 8, 20);
+                };
+            };
+
+            new p5(fireflySketch);
+        })();
+    </script>
+
+    <!-- Sidebar JS -->
+    <script>
+        (function () {
+            const body = document.body;
+            const toggleBtn = document.getElementById('info-toggle');
+            const closeBtn = document.getElementById('info-close');
+            const overlay = document.getElementById('info-overlay');
+
+            function toggleSidebar(force) {
+                const shouldOpen = typeof force === 'boolean' ? force : !body.classList.contains('sidebar-open');
+                if (shouldOpen) {
+                    body.classList.add('sidebar-open');
+                } else {
+                    body.classList.remove('sidebar-open');
+                }
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => toggleSidebar());
+            }
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => toggleSidebar(false));
+            }
+            if (overlay) {
+                overlay.addEventListener('click', () => toggleSidebar(false));
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    toggleSidebar(false);
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>

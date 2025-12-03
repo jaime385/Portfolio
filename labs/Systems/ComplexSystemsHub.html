@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Complex Systems Lab · Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+    <style>
+        body {
+            background: radial-gradient(circle at top, #020617 0, #020617 40%, #020617 70%, #020617);
+            color: #e5e7eb;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(10px);
+            background: radial-gradient(circle at top left, rgba(129, 140, 248, 0.3), transparent 60%),
+                rgba(9, 9, 11, 0.96);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.9);
+        }
+
+        .pill {
+            border-radius: 999px;
+            border: 1px solid rgba(161, 161, 170, 0.4);
+            padding: 0.15rem 0.75rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #a1a1aa;
+        }
+
+        .unit-card {
+            border-radius: 1.25rem;
+            border: 1px solid #27272a;
+            background:
+                radial-gradient(circle at top, rgba(129, 140, 248, 0.12), transparent 55%),
+                rgba(15, 15, 19, 0.98);
+            box-shadow:
+                0 18px 45px rgba(0, 0, 0, 0.7),
+                0 0 24px rgba(129, 140, 248, 0.16);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease,
+                background 0.18s ease;
+        }
+
+        .unit-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(196, 181, 253, 0.9);
+            box-shadow:
+                0 22px 55px rgba(15, 23, 42, 0.9),
+                0 0 32px rgba(129, 140, 248, 0.28);
+            background:
+                radial-gradient(circle at top, rgba(196, 181, 253, 0.18), transparent 55%),
+                rgba(10, 10, 15, 0.98);
+        }
+
+        .hero-panel {
+            border-radius: 1.5rem;
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            background:
+                radial-gradient(circle at top left, rgba(129, 140, 248, 0.45), transparent 55%),
+                radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.3), transparent 55%),
+                rgba(2, 6, 23, 0.98);
+            box-shadow:
+                0 30px 90px rgba(15, 23, 42, 0.9),
+                0 0 80px rgba(59, 130, 246, 0.45);
+        }
+
+        #hero-canvas {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            border-radius: 1.2rem;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #020617, #020617 35%, #020617);
+        }
+
+        .timeline-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 999px;
+            background: #6366f1;
+            box-shadow: 0 0 10px rgba(129, 140, 248, 0.9);
+        }
+
+        .timeline-connector {
+            height: 2px;
+            flex: 1;
+            background: linear-gradient(to right, rgba(129, 140, 248, 0.4), rgba(45, 212, 191, 0.8));
+        }
+
+        .badge {
+            border-radius: 999px;
+            padding: 0.16rem 0.55rem;
+            font-size: 0.7rem;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+            color: #e5e7eb;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top bar -->
+    <header class="top-bar">
+        <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <a href="../../index.html"
+                    class="inline-flex items-center gap-1 rounded-full border border-zinc-700/80 px-3 py-1 text-xs text-zinc-200 hover:border-indigo-400/80 hover:text-indigo-200 transition">
+                    ← Back to portfolio
+                </a>
+                <div class="pill">Complex Systems Lab · Hub</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-4 pt-6 pb-16 space-y-10">
+        <!-- Hero section -->
+        <section class="hero-panel p-5 md:p-6 grid md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-6 items-center">
+            <div class="space-y-3">
+                <p class="text-xs font-semibold tracking-[0.25em] uppercase text-indigo-200/90">
+                    Complex Systems Lab
+                </p>
+                <h1 class="text-2xl md:text-3xl font-semibold tracking-tight text-zinc-50">
+                    Agent mnemonic: state + local rules + interactions → global behavior
+                </h1>
+                <p class="text-sm text-zinc-300 max-w-xl">
+                    Every unit is a self-contained playground: minimal rules, live simulations, and short explanations.
+                    Together they give you a mental toolkit for <span class="text-sky-300">emergence</span>,
+                    <span class="text-emerald-300">collective behavior</span>, and
+                    <span class="text-amber-300">critical transitions</span> across physics, networks, and industrial
+                    systems.
+                </p>
+                <div class="flex flex-wrap gap-2 text-[0.7rem] text-zinc-200">
+                    <span class="badge">visual-first explanations</span>
+                    <span class="badge">mechanical / network thinking</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <div id="hero-canvas"></div>
+            </div>
+        </section>
+
+        <!-- Units grid -->
+        <section class="space-y-3">
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="text-sm md:text-base font-semibold text-zinc-100">
+                    Units overview
+                </h2>
+                <p class="text-[0.75rem] text-zinc-500">
+                    Recommended path: 1 → 2 → 3 → 4 → 5 (but you can jump around).
+                </p>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <!-- Unit 1 -->
+                <article class="unit-card p-4 flex flex-col gap-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">
+                                Unit 1
+                            </p>
+                            <h3 class="text-sm font-semibold text-indigo-100">
+                                Local Rules & Emergence
+                            </h3>
+                        </div>
+                        <span
+                            class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-100 border border-indigo-400/50">
+                            Boids · CA · Flocking
+                        </span>
+                    </div>
+                    <p class="text-xs text-zinc-400">
+                        Classic “agents + simple rules → surprising behavior”: boids, predator–prey, and Turing patterns
+                        give you intuition for emergent dynamics.
+                    </p>
+                    <ul class="text-[0.72rem] text-zinc-300 list-disc list-inside space-y-0.5">
+                        <li>Boids (flocking)</li>
+                        <li>Predator–prey on a grid</li>
+                        <li>Turing reaction–diffusion patterns</li>
+                    </ul>
+                    <div class="mt-2 flex items-center justify-between text-[0.7rem] text-zinc-500">
+                        <span>Great starting point if you like visual intuition.</span>
+                    </div>
+                    <div class="mt-3">
+                        <a href="ComplexSystems.html"
+                            class="inline-flex items-center justify-center gap-1 rounded-full border border-indigo-400/80 px-3 py-1.5 text-xs font-medium text-indigo-100 hover:bg-indigo-500/20 transition">
+                            Open Unit 1
+                            <span class="text-[0.9em]">↗</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Unit 2 -->
+                <article class="unit-card p-4 flex flex-col gap-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">
+                                Unit 2
+                            </p>
+                            <h3 class="text-sm font-semibold text-emerald-100">
+                                Interacting Particles & Flows
+                            </h3>
+                        </div>
+                        <span
+                            class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-100 border border-emerald-400/50">
+                            Swarms · Diffusion
+                        </span>
+                    </div>
+                    <p class="text-xs text-zinc-400">
+                        Think of many-body systems: diffusion, simple fluids, crowds and swarms. You get comfortable
+                        with conservation, flux, and local interactions.
+                    </p>
+                    <ul class="text-[0.72rem] text-zinc-300 list-disc list-inside space-y-0.5">
+                        <li>Random walks & diffusion</li>
+                        <li>Simple particle flows</li>
+                        <li>Swarming / crowd sketches</li>
+                    </ul>
+                    <div class="mt-2 flex items-center justify-between text-[0.7rem] text-zinc-500">
+                        <span>Bridges nicely into transport / physical intuitions.</span>
+                    </div>
+                    <div class="mt-3">
+                        <a href="ComplexSystems2.html"
+                            class="inline-flex items-center justify-center gap-1 rounded-full border border-emerald-400/80 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 transition">
+                            Open Unit 2
+                            <span class="text-[0.9em]">↗</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Unit 3 -->
+                <article class="unit-card p-4 flex flex-col gap-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">
+                                Unit 3
+                            </p>
+                            <h3 class="text-sm font-semibold text-sky-100">
+                                Feedback & Nonlinear Dynamics
+                            </h3>
+                        </div>
+                        <span
+                            class="text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-100 border border-sky-400/50">
+                            Maps · Chaos
+                        </span>
+                    </div>
+                    <p class="text-xs text-zinc-400">
+                        One-dimensional maps and simple feedback loops: fixed points, limit cycles, bifurcations, and
+                        the first taste of chaos in a safe sandbox.
+                    </p>
+                    <ul class="text-[0.72rem] text-zinc-300 list-disc list-inside space-y-0.5">
+                        <li>Logistic map & bifurcation</li>
+                        <li>Simple feedback loops</li>
+                        <li>Phase plots & attractors (toy versions)</li>
+                    </ul>
+                    <div class="mt-2 flex items-center justify-between text-[0.7rem] text-zinc-500">
+                        <span>Good for connecting control intuition with nonlinear behavior.</span>
+                    </div>
+                    <div class="mt-3">
+                        <a href="ComplexSystems3.html"
+                            class="inline-flex items-center justify-center gap-1 rounded-full border border-sky-400/80 px-3 py-1.5 text-xs font-medium text-sky-100 hover:bg-sky-500/20 transition">
+                            Open Unit 3
+                            <span class="text-[0.9em]">↗</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Unit 4 -->
+                <article class="unit-card p-4 flex flex-col gap-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">
+                                Unit 4
+                            </p>
+                            <h3 class="text-sm font-semibold text-indigo-100">
+                                Networks & Spreading
+                            </h3>
+                        </div>
+                        <span
+                            class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-100 border border-indigo-400/50">
+                            Graphs · SIR · Cascades
+                        </span>
+                    </div>
+                    <p class="text-xs text-zinc-400">
+                        Put the agents on graphs: small-world connectivity, SIR epidemics, cascading failures, and
+                        consensus on networks.
+                    </p>
+                    <ul class="text-[0.72rem] text-zinc-300 list-disc list-inside space-y-0.5">
+                        <li>Watts–Strogatz small-worlds</li>
+                        <li>SIR on networks</li>
+                        <li>Cascading failures & consensus</li>
+                    </ul>
+                    <div class="mt-2 flex items-center justify-between text-[0.7rem] text-zinc-500">
+                        <span>Perfect for understanding relations between lots of moving parts. </span>
+                    </div>
+                    <div class="mt-3">
+                        <a href="ComplexSystems4.html"
+                            class="inline-flex items-center justify-center gap-1 rounded-full border border-indigo-400/80 px-3 py-1.5 text-xs font-medium text-indigo-100 hover:bg-indigo-500/20 transition">
+                            Open Unit 4
+                            <span class="text-[0.9em]">↗</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Unit 5 -->
+                <article class="unit-card p-4 flex flex-col gap-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">
+                                Unit 5
+                            </p>
+                            <h3 class="text-sm font-semibold text-amber-100">
+                                Criticality & Phase Transitions
+                            </h3>
+                        </div>
+                        <span
+                            class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-100 border border-amber-400/50">
+                            Ising · Sandpile · Fire
+                        </span>
+                    </div>
+                    <p class="text-xs text-zinc-400">
+                        Systems balanced at tipping points: Ising magnet, sandpile avalanches, percolation, and
+                        forest-fire bursts. Where “a little more” flips the regime.
+                    </p>
+                    <ul class="text-[0.72rem] text-zinc-300 list-disc list-inside space-y-0.5">
+                        <li>2D Ising model</li>
+                        <li>Sandpile SOC (avalanches)</li>
+                        <li>Percolation & forest-fire model</li>
+                    </ul>
+                    <div class="mt-2 flex items-center justify-between text-[0.7rem] text-zinc-500">
+                        <span>Your mental model for “edge of failure / edge of order”.</span>
+                    </div>
+                    <div class="mt-3">
+                        <a href="ComplexSystems5.html"
+                            class="inline-flex items-center justify-center gap-1 rounded-full border border-amber-400/80 px-3 py-1.5 text-xs font-medium text-amber-100 hover:bg-amber-500/20 transition">
+                            Open Unit 5
+                            <span class="text-[0.9em]">↗</span>
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- Learning path timeline -->
+        <section class="mt-4 space-y-4">
+            <h2 class="text-sm md:text-base font-semibold text-zinc-100">
+                Suggested learning path
+            </h2>
+            <div class="flex items-center gap-3 mb-2">
+                <div class="timeline-dot"></div>
+                <div class="timeline-connector"></div>
+                <div class="timeline-dot"></div>
+                <div class="timeline-connector"></div>
+                <div class="timeline-dot"></div>
+                <div class="timeline-connector"></div>
+                <div class="timeline-dot"></div>
+                <div class="timeline-connector"></div>
+                <div class="timeline-dot"></div>
+            </div>
+            <div class="grid gap-3 md:grid-cols-5 text-[0.72rem] text-zinc-300 md:text-[0.7rem] md:gap-4">
+                <div>
+                    <p class="text-xs font-semibold text-indigo-200">Unit 1 · Emergence</p>
+                    <p>Local rules → global patterns. Build your intuition visually.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-emerald-200">Unit 2 · Flows</p>
+                    <p>Particles, diffusion & flows. Think flux and conservation.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-sky-200">Unit 3 · Nonlinear</p>
+                    <p>Maps & feedback. Fixed points, cycles, and chaos seeds.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-indigo-200">Unit 4 · Networks</p>
+                    <p>Who talks to whom: graphs, spreading, cascades, consensus.</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-amber-200">Unit 5 · Criticality</p>
+                    <p>Phase transitions & edge-of-failure thinking.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Hero p5.js sketch (oval removed) -->
+    <script>
+        (function () {
+            const heroSketch = (p) => {
+                let holder, canvas;
+                let nodes = [];
+                let edges = [];
+                const N = 36;
+
+                function init() {
+                    nodes = [];
+                    edges = [];
+
+                    const rect = holder.getBoundingClientRect();
+                    const cx = rect.width / 2;
+                    const cy = rect.height / 2;
+                    const radius = Math.min(rect.width, rect.height) * 0.34;
+
+                    for (let i = 0; i < N; i++) {
+                        const angle = (p.TWO_PI * i) / N;
+                        nodes.push({
+                            x: cx + radius * Math.cos(angle),
+                            y: cy + radius * Math.sin(angle),
+                            offset: Math.random() * 1000,
+                            phase: Math.random() * p.TWO_PI
+                        });
+                    }
+
+                    // random-ish edges
+                    for (let i = 0; i < N; i++) {
+                        const j = (i + 1) % N;
+                        edges.push([i, j]);
+
+                        if (Math.random() < 0.3) {
+                            const k = (i + 4 + Math.floor(Math.random() * (N / 3))) % N;
+                            edges.push([i, k]);
+                        }
+                    }
+                }
+
+                function resizeCanvasToHolder() {
+                    if (!holder) return;
+                    const rect = holder.getBoundingClientRect();
+                    const w = Math.max(260, rect.width);
+                    const h = rect.height || 220;
+                    p.resizeCanvas(w, h);
+                    init();
+                }
+
+                p.setup = () => {
+                    holder = document.getElementById("hero-canvas");
+                    const rect = holder.getBoundingClientRect();
+                    const c = p.createCanvas(rect.width, rect.height);
+                    c.parent(holder);
+                    p.frameRate(30);
+                    init();
+                };
+
+                p.windowResized = () => {
+                    resizeCanvasToHolder();
+                };
+
+                p.draw = () => {
+                    p.background(2, 6, 23);
+
+                    // movement
+                    const t = p.millis() * 0.0005;
+                    for (let i = 0; i < nodes.length; i++) {
+                        const n = nodes[i];
+                        n.phase += 0.002;
+                        n.x += 0.1 * Math.cos(n.phase + n.offset);
+                        n.y += 0.1 * Math.sin(n.phase + n.offset);
+                    }
+
+                    // 🔥 OVAL REMOVED — clean rectangular background only
+
+                    // edges
+                    p.stroke(129, 140, 248, 80);
+                    p.strokeWeight(1);
+                    for (let [i, j] of edges) {
+                        const a = nodes[i];
+                        const b = nodes[j];
+                        p.line(a.x, a.y, b.x, b.y);
+                    }
+
+                    // node degree colors
+                    const deg = new Array(N).fill(0);
+                    for (let [i, j] of edges) {
+                        deg[i]++;
+                        deg[j]++;
+                    }
+
+                    for (let i = 0; i < nodes.length; i++) {
+                        const n = nodes[i];
+                        const tDeg = p.constrain(p.map(deg[i], 1, 8, 0, 1), 0, 1);
+                        const col = p.lerpColor(
+                            p.color(56, 189, 248),
+                            p.color(94, 234, 212),
+                            tDeg
+                        );
+                        p.noStroke();
+                        p.fill(col);
+                        p.ellipse(n.x, n.y, 6 + 2 * tDeg, 6 + 2 * tDeg);
+                    }
+                };
+            };
+
+            new p5(heroSketch);
+        })();
+    </script>
+</body>
+
+</html>

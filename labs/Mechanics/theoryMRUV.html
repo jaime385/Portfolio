@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MRUV Theory · Position, Velocity & Acceleration</title>
+
+    <style>
+        :root {
+            --bg: #050314;
+            --card: #0b0a1a;
+            --accent: #38bdf8;
+            --accent-soft: rgba(56, 189, 248, 0.2);
+            --border: #1f2937;
+            --text-main: #e5e7eb;
+            --text-soft: #9ca3af;
+            --text-strong: #f9fafb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(129, 140, 248, 0.12), transparent 55%),
+                radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.10), transparent 55%),
+                var(--bg);
+            color: var(--text-main);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        /* Top bar */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(14px);
+            background: linear-gradient(to right, rgba(15, 23, 42, 0.96), rgba(8, 47, 73, 0.9));
+            border-bottom: 1px solid #1e293b;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .top-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .top-pill {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            padding: 3px 9px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            color: #cbd5f5;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .top-link {
+            font-size: 12px;
+            color: var(--text-soft);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.5);
+        }
+
+        .top-link:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Layout */
+        main {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 32px 18px 40px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        @media (max-width: 820px) {
+            .hero {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        .hero-title {
+            font-size: clamp(26px, 4vw, 34px);
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            margin-bottom: 10px;
+        }
+
+        .hero-subtitle {
+            font-size: 14px;
+            color: var(--text-soft);
+            max-width: 32rem;
+        }
+
+        .hero-tagline {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #a5b4fc;
+            margin-bottom: 6px;
+        }
+
+        .hero-card {
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 58%),
+                radial-gradient(circle at bottom right, rgba(129, 140, 248, 0.18), transparent 55%),
+                var(--card);
+            padding: 18px 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-card h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 14px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #bfdbfe;
+        }
+
+        .hero-card p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-soft);
+        }
+
+        .hero-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .chip {
+            font-size: 11px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+            background: rgba(15, 23, 42, 0.8);
+            color: #e5e7eb;
+            white-space: nowrap;
+        }
+
+        .chip-accent {
+            border-color: rgba(56, 189, 248, 0.75);
+            background: rgba(15, 23, 42, 0.95);
+            color: #f9fafb;
+        }
+
+        /* Section cards */
+        .section {
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .card {
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.95);
+            padding: 16px 18px 18px;
+        }
+
+        .card+.card {
+            margin-top: 14px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .card-tag {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            color: var(--text-soft);
+        }
+
+        p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 6px 0;
+        }
+
+        .muted {
+            color: var(--text-soft);
+        }
+
+        .math {
+            font-family: inherit;
+            /* use normal text font */
+            letter-spacing: 0.02em;
+            padding: 0;
+            /* no padding */
+            border-radius: 0;
+            /* no rounded box */
+            background: transparent;
+            /* no background */
+            border: none;
+            /* no border */
+            font-size: inherit;
+        }
+
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.1fr);
+            gap: 14px;
+        }
+
+        @media (max-width: 780px) {
+            .grid-2 {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        ul {
+            padding-left: 18px;
+            margin: 6px 0;
+        }
+
+        li {
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 4px;
+        }
+
+        .callout {
+            border-radius: 14px;
+            padding: 10px 12px;
+            border: 1px dashed rgba(148, 163, 184, 0.7);
+            background: rgba(15, 23, 42, 0.9);
+            font-size: 13px;
+        }
+
+        .callout-accel {
+            border-color: rgba(248, 250, 252, 0.6);
+            background: radial-gradient(circle at top left, rgba(250, 250, 250, 0.08), transparent 60%),
+                rgba(15, 23, 42, 0.94);
+        }
+
+        .callout strong {
+            color: var(--text-strong);
+        }
+
+        .equations-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+
+        .eq-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.98);
+            border: 1px solid rgba(55, 65, 81, 0.95);
+            font-size: 12px;
+        }
+
+        .eq-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.13em;
+            color: var(--text-soft);
+        }
+
+        .eq-body {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        .example-badge {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: #facc15;
+            margin-bottom: 4px;
+        }
+
+        .footer-note {
+            margin-top: 18px;
+            font-size: 12px;
+            color: var(--text-soft);
+            text-align: right;
+        }
+    </style>
+
+    <!-- MathJax config -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [
+                    ['\\(', '\\)'],
+                    ['$', '$']
+                ]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+
+<body>
+    <!-- Top bar -->
+    <header class="top-bar">
+        <div class="top-title">
+            <span class="top-pill">MRUV Lab · Theory</span>
+            Position, Velocity &amp; Acceleration with Calculus
+        </div>
+        <a href="index.html" class="top-link">← Back to portfolio</a>
+    </header>
+
+    <main>
+        <!-- Hero -->
+        <section class="hero">
+            <div>
+                <div class="hero-tagline">From textbook formulas to visual labs</div>
+                <h1 class="hero-title">How calculus really describes motion</h1>
+                <p class="hero-subtitle">
+                    In kinematics we often see three compact formulas:
+                    <span class="math">\( v = \dfrac{dx}{dt} \)</span>,
+                    <span class="math">\( a = \dfrac{dv}{dt} \)</span> and
+                    <span class="math">\( a = v \dfrac{dv}{dx} \)</span>.
+                    This page connects them to intuition and to the
+                    <strong>Uniformly Accelerated Motion Lab (MRUV)</strong> in this portfolio.
+                </p>
+            </div>
+
+            <aside class="hero-card">
+                <h3>Reading guide</h3>
+                <p>
+                    Think of a single object moving along a straight line (1D motion).
+                    We’ll build the story in three layers:
+                </p>
+                <div class="hero-chip-row">
+                    <span class="chip chip-accent">1. Position → Velocity</span>
+                    <span class="chip">2. Velocity → Acceleration (in time)</span>
+                    <span class="chip">3. Acceleration as a function of position</span>
+                </div>
+            </aside>
+        </section>
+
+        <!-- Section 1: Position and velocity -->
+        <section class="section">
+            <h2 class="section-title">1. Position and velocity: \( v = \dfrac{dx}{dt} \)</h2>
+
+            <article class="card grid-2">
+                <div>
+                    <div class="card-header">
+                        <div class="card-title">Position as a function of time</div>
+                        <span class="card-tag">Concept</span>
+                    </div>
+                    <p>
+                        If an object moves along a line, we describe its position with a function
+                        <span class="math">x(t)</span>, where:
+                    </p>
+                    <ul>
+                        <li><span class="math">x</span> is the position (for example, in meters).</li>
+                        <li><span class="math">t</span> is time (seconds).</li>
+                        <li>The graph of <span class="math">x(t)</span> is a curve in the plane <strong>position vs.
+                                time</strong>.</li>
+                    </ul>
+
+                    <div class="callout">
+                        <strong>Idea:</strong> zoom in on the curve. Very close to a point,
+                        the curve looks almost like a straight line. The slope of that tiny line
+                        is the <strong>instantaneous velocity</strong>.
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card-header">
+                        <div class="card-title">Velocity as a derivative</div>
+                        <span class="card-tag">Definition</span>
+                    </div>
+                    <p>
+                        The instantaneous velocity is defined as:
+                    </p>
+                    <p class="math">\( v(t) = \dfrac{dx}{dt} \)</p>
+                    <ul>
+                        <li>“Change of position per unit time”.</li>
+                        <li>Units: meters per second (m/s).</li>
+                        <li>Geometrically: the <strong>slope</strong> of the tangent line to the graph of <span
+                                class="math">x(t)</span>.</li>
+                    </ul>
+
+                    <div class="callout">
+                        <strong>When to use it?</strong><br />
+                        Whenever you know or assume the function <span class="math">x(t)</span>.
+                        Differentiate it to get <span class="math">v(t)</span>.
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <!-- Section 2: Velocity and acceleration in time -->
+        <section class="section">
+            <h2 class="section-title">2. Velocity and acceleration in time: \( a = \dfrac{dv}{dt} \)</h2>
+
+            <article class="card grid-2">
+                <div>
+                    <div class="card-header">
+                        <div class="card-title">How fast does the velocity change?</div>
+                        <span class="card-tag">Concept</span>
+                    </div>
+                    <p>
+                        If velocity tells us how position changes, acceleration tells us how
+                        <strong>velocity</strong> changes:
+                    </p>
+                    <p class="math">\( a(t) = \dfrac{dv}{dt} \)</p>
+                    <ul>
+                        <li>Units: m/s² (change of m/s per second).</li>
+                        <li>If <span class="math">a &gt; 0</span>, speed increases in the positive direction.</li>
+                        <li>If <span class="math">a &lt; 0</span>, the object is slowing down (or speeding up in the
+                            opposite direction).</li>
+                    </ul>
+                    <div class="callout callout-accel">
+                        <strong>Geometric view:</strong> On the velocity–time graph,
+                        acceleration is the <strong>slope</strong> of the curve.
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card-header">
+                        <div class="card-title">Uniformly accelerated motion (MRUV)</div>
+                        <span class="card-tag">Special case</span>
+                    </div>
+                    <p>
+                        In MRUV the acceleration is constant:
+                    </p>
+                    <p class="math">a(t) = a_0</p>
+                    <p>
+                        Integrating step by step:
+                    </p>
+                    <ul>
+                        <li><span class="math">\( v(t) = v_0 + a_0 t \)</span></li>
+                        <li><span class="math">\( x(t) = x_0 + v_0 t + \dfrac{1}{2} a_0 t^2 \)</span></li>
+                    </ul>
+                    <p class="muted">
+                        These are the classic MRUV equations you see in problem 11.3 and
+                        that we use inside the interactive MRUV Lab.
+                    </p>
+                </div>
+            </article>
+        </section>
+
+        <!-- Section 3: Acceleration as function of position -->
+        <section class="section">
+            <h2 class="section-title">3. Acceleration as a function of position: \( a = v \, \dfrac{dv}{dx} \)</h2>
+
+            <article class="card">
+                <div class="card-header">
+                    <div class="card-title">Chain rule connection</div>
+                    <span class="card-tag">Why this formula appears</span>
+                </div>
+
+                <p>
+                    Sometimes the force (and therefore the acceleration) depends more naturally
+                    on the <strong>position</strong> of the object than on time. In that case,
+                    we use the chain rule from calculus to connect
+                    <span class="math">a = dv/dt</span> with derivatives with respect to <span class="math">x</span>.
+                </p>
+
+                <div class="equations-row">
+                    <div class="eq-pill">
+                        <span class="eq-label">start</span>
+                        <span class="eq-body">a = dv/dt</span>
+                    </div>
+                    <div class="eq-pill">
+                        <span class="eq-label">chain rule</span>
+                        <span class="eq-body">dv/dt = (dv/dx) · (dx/dt)</span>
+                    </div>
+                    <div class="eq-pill">
+                        <span class="eq-label">but</span>
+                        <span class="eq-body">dx/dt = v</span>
+                    </div>
+                    <div class="eq-pill">
+                        <span class="eq-label">therefore</span>
+                        <span class="eq-body">a = v · dv/dx</span>
+                    </div>
+                </div>
+
+                <p>
+                    So the same acceleration can be written in three equivalent ways:
+                </p>
+                <div class="equations-row">
+                    <span class="eq-pill"><span class="eq-label">time</span><span class="eq-body">a =
+                            dv/dt</span></span>
+                    <span class="eq-pill"><span class="eq-label">position</span><span class="eq-body">a = v ·
+                            dv/dx</span></span>
+                </div>
+
+                <div class="grid-2" style="margin-top:12px;">
+                    <div>
+                        <div class="callout">
+                            <strong>When to use \( a = v \, dv/dx \)?</strong>
+                            <ul>
+                                <li>When you know or can express the force as a function of position <span
+                                        class="math">F(x)</span>.</li>
+                                <li>In energy methods: relating kinetic and potential energy.</li>
+                                <li>When it is easier to integrate with respect to <span class="math">x</span> than with
+                                    respect to <span class="math">t</span>.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="example-badge">Mini example (idea, not full solution)</div>
+                        <p>
+                            Imagine a particle moving in a potential well where the force is
+                            <span class="math">F(x) = -k x</span> (like a spring).
+                            From Newton: <span class="math">m a = -k x</span>.
+                        </p>
+                        <p>
+                            If we write <span class="math">a = v dv/dx</span>, then
+                            <span class="math">m v dv/dx = -k x</span>, which is a differential equation in
+                            variables <span class="math">v</span> and <span class="math">x</span>. Integrating gives
+                            directly a relation between velocity and position.
+                        </p>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <!-- Section 4: Summary table -->
+        <section class="section">
+            <h2 class="section-title">4. Summary: which equation should I use?</h2>
+
+            <article class="card">
+                <p class="muted" style="margin-bottom:6px;">
+                    The textbook paragraph you showed basically says:
+                    “here is a summary of how and when to use each equation”.
+                    Here is that idea in a compact, visual form:
+                </p>
+
+                <div class="grid-2" style="margin-top:10px;">
+                    <div>
+                        <ul>
+                            <li>
+                                <strong>If you know \( x(t) \):</strong><br />
+                                use <span class="math">\( v = \dfrac{dx}{dt} \)</span> to get velocity,
+                                then <span class="math">\( a = \dfrac{dv}{dt} \)</span> to get acceleration.
+                            </li>
+                            <li>
+                                <strong>If acceleration is constant:</strong><br />
+                                integrate once to get <span class="math">v(t)</span>,
+                                integrate again to get <span class="math">x(t)</span>
+                                (MRUV equations).
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <ul>
+                            <li>
+                                <strong>If you know \( a(x) \) or \( F(x) \):</strong><br />
+                                write <span class="math">a = v dv/dx</span> and integrate with respect
+                                to <span class="math">x</span> to find how velocity depends on position.
+                            </li>
+                            <li>
+                                <strong>Graphically:</strong><br />
+                                – slope of <span class="math">x(t)</span> → <span class="math">v(t)</span><br />
+                                – slope of <span class="math">v(t)</span> → <span class="math">a(t)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="callout" style="margin-top:12px;">
+                    <strong>Connection with the MRUV Lab:</strong>
+                    in the interactive simulation you can see how changing
+                    the initial conditions <span class="math">x_0</span>, <span class="math">v_0</span> and the
+                    constant acceleration <span class="math">a_0</span> modifies the curves
+                    <span class="math">x(t)</span>, <span class="math">v(t)</span> and <span class="math">a(t)</span>
+                    in real time. Those curves are just the graphical result of
+                    the derivatives and integrals explained here.
+                </div>
+
+            </article>
+        </section>
+    </main>
+</body>
+
+</html>

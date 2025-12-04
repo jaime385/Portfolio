@@ -132,18 +132,84 @@
                         update rule to turn them into boids, prey, routers, etc.
                     </p>
                 </div>
-                <div class="flex flex-col items-end gap-1">
-                    <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Try this</span>
+                <div class="hidden sm:flex flex-col items-end gap-1">
+                    <span class="text-[0.65rem] text-zinc-500 uppercase tracking-wide">Original rules</span>
                     <ul class="text-[0.7rem] text-zinc-400 list-disc list-inside">
-                        <li>Move the mouse: agents gently drift toward it.</li>
-                        <li>Resize window: world and agents adapt.</li>
+                        <li>Move the mouse: agents react to it.</li>
+                        <li>Change mode: seek, avoid, orbit.</li>
                     </ul>
                 </div>
             </div>
 
             <div id="agent-holder"></div>
 
-            <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-1">
+            <!-- NEW: interactive control panel -->
+            <div
+                class="mt-3 grid gap-3 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)] text-[0.75rem] text-zinc-300 md:items-start">
+                <!-- Controls -->
+                <div class="space-y-2">
+                    <p class="uppercase text-[0.65rem] text-zinc-400 tracking-[0.18em]">
+                        Controls
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            class="behavior-btn px-3 py-1.5 rounded-full border border-zinc-600/80 bg-zinc-900/70 text-xs hover:border-indigo-400/80 hover:text-indigo-200 transition"
+                            data-behavior="seek" data-label="Seek cursor">
+                            Seek cursor
+                        </button>
+                        <button
+                            class="behavior-btn px-3 py-1.5 rounded-full border border-zinc-600/80 bg-zinc-900/70 text-xs hover:border-indigo-400/80 hover:text-indigo-200 transition"
+                            data-behavior="avoid" data-label="Avoid cursor">
+                            Avoid cursor
+                        </button>
+                        <button
+                            class="behavior-btn px-3 py-1.5 rounded-full border border-zinc-600/80 bg-zinc-900/70 text-xs hover:border-indigo-400/80 hover:text-indigo-200 transition"
+                            data-behavior="orbit" data-label="Orbit center">
+                            Orbit center
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap gap-4 items-center mt-2">
+                        <label class="flex items-center gap-2">
+                            <span class="text-zinc-400">Speed</span>
+                            <input id="speedSlider" type="range" min="0.5" max="3" step="0.1" value="1.4"
+                                class="w-32 accent-indigo-400">
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <span class="text-zinc-400">Agents</span>
+                            <input id="countSlider" type="range" min="20" max="200" step="10" value="80"
+                                class="w-32 accent-emerald-400">
+                        </label>
+                        <button id="resetAgentsBtn"
+                            class="px-3 py-1.5 rounded-full border border-zinc-600/80 bg-zinc-900/70 text-xs hover:border-emerald-400/80 hover:text-emerald-200 transition">
+                            Reset swarm
+                        </button>
+                    </div>
+
+                    <p class="text-[0.7rem] text-zinc-400">
+                        Current mode:
+                        <span id="behaviorLabel" class="text-indigo-300 font-medium">Seek cursor</span> ·
+                        try dragging sliders and swapping modes while you move the mouse.
+                    </p>
+                </div>
+
+                <!-- Missions / learning prompts -->
+                <div class="space-y-2">
+                    <p class="uppercase text-[0.65rem] text-zinc-400 tracking-[0.18em]">
+                        Mini missions
+                    </p>
+                    <ul class="list-disc list-inside space-y-1 text-zinc-300">
+                        <li><strong>Escape artist:</strong> set mode to <span class="text-emerald-300">Avoid</span> and
+                            see if you can “trap” agents with your cursor.</li>
+                        <li><strong>Stable orbit:</strong> choose <span class="text-indigo-300">Orbit</span>, tune
+                            speed until the swarm feels like a stable ring.</li>
+                        <li><strong>Field vs particles:</strong> push agents to 200 and watch when dots start feeling
+                            like a continuous “fluid”.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-zinc-400 mt-2">
                 <span>Each dot is one <span class="text-indigo-300">Agent</span> instance.</span>
                 <span>Same template → different behavior when you change <code>update()</code>.</span>
             </div>
@@ -374,46 +440,71 @@ class World {
         </section>
     </main>
 
-    <!-- Live demo script: uses the Agent/World template -->
+    <!-- Live demo script: uses the Agent/World template with interactive controls -->
     <script>
         (function () {
             const sketch = (p) => {
                 let holder, canvas;
                 let world;
 
+                // interactive parameters
+                let behaviorMode = "seek"; // "seek" | "avoid" | "orbit"
+                let speedFactor = 1.4;
+                let agentCount = 80;
+
                 class Agent {
                     constructor(world, x, y) {
                         this.world = world;
                         this.pos = p.createVector(x, y);
                         this.vel = p5.Vector.random2D().mult(1.2);
-                        this.maxSpeed = 2.0;
+                        this.baseMaxSpeed = 2.0;
                         this.size = 5;
                     }
 
                     update() {
-                        // Gentle pull towards mouse if inside canvas
-                        const target = this.world.getTarget();
-                        if (target) {
-                            const desired = p5.Vector.sub(target, this.pos);
-                            const dist = desired.mag();
-                            if (dist > 5) {
-                                desired.setMag(0.08);
-                                this.vel.add(desired);
+                        // behaviour depends on global behaviorMode
+                        if (behaviorMode === "seek") {
+                            const target = this.world.getMouseTarget();
+                            if (target) {
+                                const desired = p5.Vector.sub(target, this.pos);
+                                const dist = desired.mag();
+                                if (dist > 5) {
+                                    desired.setMag(0.08);
+                                    this.vel.add(desired);
+                                }
+                            } else {
+                                this.vel.add(p5.Vector.random2D().mult(0.03));
                             }
-                        } else {
-                            // small random walk when no target
-                            this.vel.add(p5.Vector.random2D().mult(0.05));
+                        } else if (behaviorMode === "avoid") {
+                            const target = this.world.getMouseTarget();
+                            if (target) {
+                                let away = p5.Vector.sub(this.pos, target);
+                                const dist = away.mag();
+                                if (dist < 120) {
+                                    away.setMag(0.18);
+                                    this.vel.add(away);
+                                }
+                            }
+                            this.vel.add(p5.Vector.random2D().mult(0.04));
+                        } else if (behaviorMode === "orbit") {
+                            const center = this.world.getCenter();
+                            let toCenter = p5.Vector.sub(center, this.pos);
+                            let radial = toCenter.copy().setMag(0.04);
+                            let tangential = p.createVector(-radial.y, radial.x).setMag(0.05);
+                            this.vel.add(radial).add(tangential);
                         }
 
-                        this.vel.limit(this.maxSpeed);
+                        // limit speed with slider factor
+                        const maxSpeed = this.baseMaxSpeed * speedFactor;
+                        this.vel.limit(maxSpeed);
                         this.pos.add(this.vel);
                         this.world.wrap(this);
                     }
 
                     draw(p) {
-                        // color a bit based on speed
                         const speed = this.vel.mag();
-                        const t = p.constrain(p.map(speed, 0, this.maxSpeed, 0, 1), 0, 1);
+                        const maxSpeed = this.baseMaxSpeed * speedFactor;
+                        const t = p.constrain(p.map(speed, 0, maxSpeed, 0, 1), 0, 1);
                         const col = p.lerpColor(
                             p.color(129, 140, 248),
                             p.color(45, 212, 191),
@@ -436,12 +527,16 @@ class World {
                         }
                     }
 
-                    getTarget() {
+                    getMouseTarget() {
                         if (this.p.mouseX < 0 || this.p.mouseX > this.p.width ||
                             this.p.mouseY < 0 || this.p.mouseY > this.p.height) {
                             return null;
                         }
                         return this.p.createVector(this.p.mouseX, this.p.mouseY);
+                    }
+
+                    getCenter() {
+                        return this.p.createVector(this.p.width / 2, this.p.height / 2);
                     }
 
                     wrap(agent) {
@@ -464,17 +559,21 @@ class World {
 
                         // subtle HUD
                         this.p.noStroke();
-                        this.p.fill(15, 23, 42, 220);
-                        this.p.rect(0, 0, 240, 36);
+                        this.p.fill(15, 23, 42, 230);
+                        this.p.rect(0, 0, 240, 40);
                         this.p.fill(224, 231, 255);
                         this.p.textAlign(this.p.LEFT, this.p.TOP);
                         this.p.textSize(10);
-                        this.p.text("Agent template demo", 8, 6);
+                        this.p.text("Agent template sandbox", 8, 6);
                         this.p.fill(148, 163, 184);
                         this.p.textSize(9);
-                        this.p.text(`agents: ${this.agents.length}`, 8, 20);
+                        this.p.text(`agents: ${this.agents.length}  |  mode: ${behaviorMode}`, 8, 20);
                     }
                 }
+
+                const rebuildWorld = () => {
+                    world = new World(p, agentCount);
+                };
 
                 function resizeCanvasToHolder() {
                     if (!holder) return;
@@ -490,7 +589,56 @@ class World {
                     canvas = p.createCanvas(rect.width, rect.height);
                     canvas.parent(holder);
                     p.frameRate(30);
-                    world = new World(p, 80);
+                    rebuildWorld();
+
+                    // --- UI wiring ---
+                    const behaviorButtons = document.querySelectorAll(".behavior-btn");
+                    const behaviorLabel = document.getElementById("behaviorLabel");
+                    const speedSlider = document.getElementById("speedSlider");
+                    const countSlider = document.getElementById("countSlider");
+                    const resetBtn = document.getElementById("resetAgentsBtn");
+
+                    behaviorButtons.forEach(btn => {
+                        btn.addEventListener("click", () => {
+                            behaviorMode = btn.dataset.behavior || "seek";
+                            if (behaviorLabel) {
+                                behaviorLabel.textContent = btn.dataset.label || btn
+                                    .textContent.trim();
+                            }
+                            // simple visual highlight
+                            behaviorButtons.forEach(b => {
+                                b.style.boxShadow = "none";
+                                b.style.borderColor = "rgba(82,82,91,0.8)";
+                            });
+                            btn.style.boxShadow = "0 0 0 1px rgba(129,140,248,0.9)";
+                            btn.style.borderColor = "rgba(129,140,248,0.9)";
+                        });
+                    });
+                    // set initial highlight
+                    if (behaviorButtons[0]) {
+                        behaviorButtons[0].click();
+                    }
+
+                    if (speedSlider) {
+                        speedFactor = parseFloat(speedSlider.value) || 1;
+                        speedSlider.addEventListener("input", () => {
+                            speedFactor = parseFloat(speedSlider.value) || 1;
+                        });
+                    }
+
+                    if (countSlider) {
+                        agentCount = parseInt(countSlider.value) || 80;
+                        countSlider.addEventListener("input", () => {
+                            agentCount = parseInt(countSlider.value) || 80;
+                            rebuildWorld();
+                        });
+                    }
+
+                    if (resetBtn) {
+                        resetBtn.addEventListener("click", () => {
+                            rebuildWorld();
+                        });
+                    }
                 };
 
                 p.windowResized = () => {
@@ -499,6 +647,7 @@ class World {
 
                 p.draw = () => {
                     p.background(3, 7, 19);
+                    if (!world) return;
                     world.step();
                     world.draw();
                 };

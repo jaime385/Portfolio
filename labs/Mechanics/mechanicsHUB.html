@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Mechanics Virtual Lab · Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: radial-gradient(circle at top, #020617 0%, #020617 35%, #020617 100%);
+            color: #e5e7eb;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .glass-card {
+            background: radial-gradient(circle at top left, rgba(30, 64, 175, 0.35), rgba(15, 23, 42, 0.96));
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            box-shadow:
+                0 25px 60px rgba(15, 23, 42, 0.9),
+                0 0 0 1px rgba(15, 23, 42, 0.9);
+        }
+
+        .lab-card {
+            background: radial-gradient(circle at top left, rgba(30, 64, 175, 0.22), rgba(15, 23, 42, 0.96));
+            border: 1px solid rgba(31, 41, 55, 0.95);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.86);
+        }
+
+        .pill {
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.8);
+            background: rgba(15, 23, 42, 0.9);
+            font-size: 0.7rem;
+            padding: 0.15rem 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .status-ready {
+            border-color: rgba(34, 197, 94, 0.8);
+            color: #bbf7d0;
+        }
+
+        .status-proto {
+            border-color: rgba(234, 179, 8, 0.8);
+            color: #fef9c3;
+        }
+
+        .status-soon {
+            border-color: rgba(148, 163, 184, 0.7);
+            color: #e5e7eb;
+            opacity: 0.8;
+        }
+
+        .chip-small {
+            font-size: 0.65rem;
+            border-radius: 999px;
+            padding: 0.1rem 0.4rem;
+            border: 1px solid rgba(148, 163, 184, 0.55);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .title-glow {
+            text-shadow:
+                0 0 18px rgba(129, 140, 248, 0.7),
+                0 0 40px rgba(37, 99, 235, 0.7);
+        }
+
+        .btn-outline {
+            border-radius: 999px;
+            border-width: 1px;
+            border-color: rgba(148, 163, 184, 0.9);
+            background: radial-gradient(circle at top, rgba(37, 99, 235, 0.22), rgba(15, 23, 42, 0.97));
+            font-size: 0.8rem;
+            padding: 0.45rem 0.85rem;
+            transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease;
+        }
+
+        .btn-outline:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.45);
+        }
+
+        .btn-ghost {
+            border-radius: 999px;
+            font-size: 0.75rem;
+            padding: 0.3rem 0.75rem;
+            border: 1px solid rgba(75, 85, 99, 0.9);
+            background: rgba(15, 23, 42, 0.9);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+    <!-- Top bar -->
+    <header class="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-lg">
+        <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex h-8 w-8 items-center justify-center rounded-full border border-indigo-400/70 bg-slate-950/80 text-xs text-indigo-200">
+                    Lab
+                </div>
+                <div>
+                    <h1 class="title-glow text-sm font-semibold text-slate-50">
+                        Mechanics Virtual Lab · Hub
+                    </h1>
+                    <p class="text-[0.72rem] text-slate-400">
+                        Interactive simulations for classical mechanics.
+                    </p>
+                </div>
+            </div>
+
+            <a href="../../index.html" class="btn-ghost text-slate-200 hover:border-indigo-400 hover:text-indigo-200">
+                Back to portfolio
+            </a>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="mx-auto max-w-6xl px-4 pb-16 pt-6">
+        <!-- Overview card -->
+        <section class="glass-card mb-6 rounded-3xl px-5 py-4 sm:px-7 sm:py-6">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="max-w-2xl">
+                    <p class="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Mechanics curriculum
+                    </p>
+                    <h2 class="mb-2 text-lg font-semibold text-slate-50">
+                        Explore interactive labs for motion, forces, energy, vibrations and more.
+                    </h2>
+                    <p class="text-xs text-slate-300 sm:text-sm">
+                        Each lab focuses on a core topic of classical mechanics. Visualize trajectories,
+                        graphs, and equations in real time, then solve guided exercises with step-by-step
+                        paper solutions.
+                    </p>
+                </div>
+
+                <div class="flex flex-col items-end gap-2 text-right">
+                    <div class="flex gap-1.5">
+                        <span class="pill status-ready">Ready</span>
+                        <span class="pill status-proto">In design</span>
+                        <span class="pill status-soon">Coming soon</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Labs grid -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between gap-3">
+                <h3 class="text-sm font-semibold text-slate-100">
+                    Lab collection
+                </h3>
+                <span class="chip-small text-[0.67rem] text-slate-300">
+                    Tip: start with MRU, then unlock MRUV and 2D motion.
+                </span>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <!-- MRU lab card -->
+                <article class="lab-card flex flex-col justify-between rounded-2xl p-4">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <h4 class="text-sm font-semibold text-slate-50">
+                                Uniform Rectilinear Motion (MRU)
+                            </h4>
+                            <span class="pill status-ready">Ready</span>
+                        </div>
+                        <p class="text-xs text-slate-300">
+                            Visualize constant-velocity motion on a straight line. Track the object,
+                            explore the x–t graph, and solve exercises using
+                            <span class="font-mono text-[0.7rem]">x(t) = x₀ + v·t</span>
+                            with full paper solutions.
+                        </p>
+                        <ul class="mt-1 space-y-1 text-[0.7rem] text-slate-400">
+                            <li>• Live x–t diagram with target point</li>
+                            <li>• Exercise mode with feedback and animations</li>
+                            <li>• Velocity &amp; initial position controls linked to graph</li>
+                        </ul>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between gap-2">
+                        <a href="mru.html" class="btn-outline text-xs text-slate-50">
+                            ▶ Open MRU lab
+                        </a>
+                        <span class="chip-small text-[0.65rem] text-emerald-200">
+                            Recommended starting point
+                        </span>
+                    </div>
+                </article>
+
+                <!-- MRUV card -->
+                <article class="lab-card flex flex-col justify-between rounded-2xl p-4 opacity-90">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <h4 class="text-sm font-semibold text-slate-50">
+                                Uniformly Accelerated Motion (MRUV)
+                            </h4>
+                            <span class="pill status-ready">Ready</span>
+                        </div>
+                        <p class="text-xs text-slate-300">
+                            Extend MRU to constant acceleration with
+                            <span class="font-mono text-[0.7rem]">x(t) = x₀ + v₀·t + ½ a·t²</span>
+                            and
+                            <span class="font-mono text-[0.7rem]">v(t) = v₀ + a·t</span>.
+                            Compare x–t, v–t graphs and visualize the effect of changing
+                            acceleration.
+                        </p>
+                        <ul class="mt-1 space-y-1 text-[0.7rem] text-slate-400">
+                            <li>• x–t and v–t graphs in sync</li>
+                            <li>• Free-fall &amp; braking examples</li>
+                            <li>• Exercise mode: find a, v₀ or x₀ from data</li>
+                        </ul>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between gap-2">
+                        <a href="mruv.html" class="btn-outline text-xs text-slate-50">
+                            ▶ Open MRUV lab
+                        </a>
+                        <span class="chip-small text-[0.65rem] text-emerald-200">
+                            Recommended starting point
+                        </span>
+                    </div>
+                </article>
+
+                <!-- 2D Projectile motion -->
+                <article class="lab-card flex flex-col justify-between rounded-2xl p-4 opacity-90">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <h4 class="text-sm font-semibold text-slate-50">
+                                2D Projectile Motion
+                            </h4>
+                            <span class="pill status-soon">Coming soon</span>
+                        </div>
+                        <p class="text-xs text-slate-300">
+                            Simulate projectile motion with adjustable launch angle, speed, and
+                            gravity. Show x–t, y–t and trajectory views side-by-side.
+                        </p>
+                        <ul class="mt-1 space-y-1 text-[0.7rem] text-slate-400">
+                            <li>• Range, max height and flight time</li>
+                            <li>• Vector decomposition of initial velocity</li>
+                            <li>• Exercise mode: solve for angle or speed</li>
+                        </ul>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between gap-2">
+                        <button class="btn-outline cursor-not-allowed text-xs text-slate-400">
+                            📐 Plan interactions
+                        </button>
+                        <span class="chip-small text-[0.65rem] text-slate-300">
+                            2D kinematics
+                        </span>
+                    </div>
+                </article>
+
+                <!-- Energy lab -->
+                <article class="lab-card flex flex-col justify-between rounded-2xl p-4 opacity-90">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <h4 class="text-sm font-semibold text-slate-50">
+                                Work &amp; Energy
+                            </h4>
+                            <span class="pill status-soon">Coming soon</span>
+                        </div>
+                        <p class="text-xs text-slate-300">
+                            Track kinetic and potential energy for carts on tracks or masses in
+                            a gravitational field. Show real-time energy bars and
+                            <span class="font-mono text-[0.7rem]">E = constant</span> checks.
+                        </p>
+                        <ul class="mt-1 space-y-1 text-[0.7rem] text-slate-400">
+                            <li>• Visual energy conservation</li>
+                            <li>• Work–area interpretation on F–x graphs</li>
+                            <li>• Losses and friction (advanced)</li>
+                        </ul>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between gap-2">
+                        <button class="btn-outline cursor-not-allowed text-xs text-slate-400">
+                            ⚡ Define scenarios
+                        </button>
+                        <span class="chip-small text-[0.65rem] text-slate-300">
+                            Energy perspective
+                        </span>
+                    </div>
+                </article>
+
+                <!-- Momentum lab -->
+                <article class="lab-card flex flex-col justify-between rounded-2xl p-4 opacity-90">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <h4 class="text-sm font-semibold text-slate-50">
+                                Momentum &amp; Collisions
+                            </h4>
+                            <span class="pill status-soon">Coming soon</span>
+                        </div>
+                        <p class="text-xs text-slate-300">
+                            Explore 1D collisions between carts. Show total momentum and
+                            kinetic energy before and after impact; compare elastic vs inelastic
+                            cases.
+                        </p>
+                        <ul class="mt-1 space-y-1 text-[0.7rem] text-slate-400">
+                            <li>• Momentum vectors and bar charts</li>
+                            <li>• Elastic vs inelastic visual comparison</li>
+                            <li>• Exercise mode: unknown final velocity</li>
+                        </ul>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between gap-2">
+                        <button class="btn-outline cursor-not-allowed text-xs text-slate-400">
+                            🧱 Sketch collision engine
+                        </button>
+                        <span class="chip-small text-[0.65rem] text-slate-300">
+                            Conservation laws
+                        </span>
+                    </div>
+                </article>
+
+                <!-- Vibrations lab -->
+                <article class="lab-card flex flex-col justify-between rounded-2xl p-4 opacity-90">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <h4 class="text-sm font-semibold text-slate-50">
+                                Oscillations &amp; Vibrations
+                            </h4>
+                            <span class="pill status-soon">Coming soon</span>
+                        </div>
+                        <p class="text-xs text-slate-300">
+                            Mass–spring and pendulum systems with time-domain plots, phase
+                            portraits and energy visualization – a bridge into your vibration
+                            analysis work.
+                        </p>
+                        <ul class="mt-1 space-y-1 text-[0.7rem] text-slate-400">
+                            <li>• x–t and phase-space views</li>
+                            <li>• Damping and forcing (advanced)</li>
+                            <li>• Connection to Fourier analysis lab</li>
+                        </ul>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between gap-2">
+                        <button class="btn-outline cursor-not-allowed text-xs text-slate-400">
+                            🕒 Scheduled later
+                        </button>
+                        <span class="chip-small text-[0.65rem] text-slate-300">
+                            Gateway to vibrations
+                        </span>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- Roadmap footer -->
+        <section class="mt-8 rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+
+                <div class="flex flex-col items-end gap-1 text-right">
+                    <div class="h-1.5 w-40 overflow-hidden rounded-full bg-slate-800">
+                        <div class="h-full w-1/6 rounded-full bg-emerald-400"></div>
+                    </div>
+                    <p class="text-[0.7rem] text-slate-400">
+                        Version 0.1 · MRU lab online · more modules coming.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>

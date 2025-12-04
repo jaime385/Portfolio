@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Uniformly Accelerated Motion · MRUV Lab</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            background: #050314;
+            color: #e5e7eb;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .mruv-header {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            backdrop-filter: blur(10px);
+            background: rgba(10, 10, 15, 0.55);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .mruv-header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 14px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mruv-title {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .mruv-back-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e5e7eb;
+            text-decoration: none;
+            transition: all 0.18s ease;
+        }
+
+        .mruv-back-btn:hover {
+            background: rgba(129, 140, 248, 0.15);
+            border-color: rgba(129, 140, 248, 0.6);
+            box-shadow: 0 0 12px rgba(129, 140, 248, 0.25);
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+            gap: 18px;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        .card {
+            border-radius: 18px;
+            border: 1px solid rgba(31, 41, 55, 0.9);
+            background: radial-gradient(circle at top,
+                    rgba(15, 23, 42, 0.9),
+                    rgba(3, 7, 18, 0.98));
+            padding: 14px 16px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+        }
+
+        .card h2 {
+            font-size: 15px;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        #sketch-holder {
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        #sketch-holder canvas {
+            display: block;
+        }
+
+        .controls-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .control-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .control-header span.value {
+            color: #a5b4fc;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .control-inputs {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .control-inputs input[type="range"] {
+            flex: 1;
+        }
+
+        .control-inputs input[type="number"] {
+            width: 70px;
+            padding: 3px 6px;
+            border-radius: 8px;
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7eb;
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.8);
+            background: radial-gradient(circle at top,
+                    rgba(37, 99, 235, 0.22),
+                    rgba(15, 23, 42, 0.95));
+            color: #e5e7eb;
+            font-size: 12px;
+            cursor: pointer;
+            transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
+        }
+
+        .equation-box {
+            font-size: 12px;
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px dashed rgba(148, 163, 184, 0.6);
+            background: rgba(15, 23, 42, 0.85);
+        }
+
+        .equation-box code {
+            font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+                Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 11px;
+        }
+
+        .readouts {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .readout {
+            font-size: 12px;
+            padding: 6px 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(55, 65, 81, 0.8);
+            background: rgba(15, 23, 42, 0.92);
+        }
+
+        .readout-label {
+            color: #9ca3af;
+            font-size: 11px;
+        }
+
+        .readout-value {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* --- Theory panel + FAB button --- */
+
+        .fab-theory {
+            position: fixed;
+            right: 28px;
+            bottom: 28px;
+            width: 52px;
+            height: 52px;
+            border-radius: 999px;
+            border: 1px solid rgba(74, 222, 128, 0.6);
+            background: radial-gradient(circle at center,
+                    rgba(74, 222, 128, 0.25),
+                    rgba(15, 23, 42, 1));
+            color: #ecfdf5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            cursor: pointer;
+            box-shadow: 0 0 22px rgba(34, 197, 94, 0.4);
+            z-index: 60;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+        }
+
+        .fab-theory:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 0 32px rgba(34, 197, 94, 0.6);
+        }
+
+        .theory-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at top right,
+                    rgba(56, 189, 248, 0.12),
+                    transparent 55%),
+                rgba(3, 7, 18, 0.78);
+            backdrop-filter: blur(14px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.22s ease;
+            z-index: 55;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .theory-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .theory-panel {
+            position: relative;
+            /* so the close button is pinned to this panel */
+            width: min(520px, 100%);
+            max-width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top left,
+                    rgba(129, 140, 248, 0.16),
+                    transparent 60%),
+                rgba(10, 10, 25, 0.98);
+            border-left: 1px solid rgba(148, 163, 184, 0.25);
+            padding: 18px 22px 20px;
+            box-shadow: -24px 0 50px rgba(15, 23, 42, 0.95);
+            transform: translateX(100%);
+            transition: transform 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .theory-overlay.open .theory-panel {
+            transform: translateX(0);
+        }
+
+        .theory-close {
+            position: absolute;
+            top: 14px;
+            right: 22px;
+            /* matches panel padding */
+            appearance: none;
+            border-radius: 999px;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7eb;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+            transition: transform 0.1s ease, box-shadow 0.12s ease,
+                background 0.12s ease, border-color 0.12s ease;
+        }
+
+        .theory-close:hover {
+            background: rgba(30, 64, 175, 0.9);
+            border-color: rgba(191, 219, 254, 0.9);
+            transform: translateY(-1px);
+            box-shadow: 0 0 14px rgba(59, 130, 246, 0.5);
+        }
+
+        .theory-pill {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+            color: #cbd5f5;
+        }
+
+        .theory-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .theory-header {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 10px;
+            padding-right: 40px;
+            /* space so title doesn't sit under the close button */
+        }
+
+        .theory-body {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(31, 41, 55, 0.9);
+            overflow-y: auto;
+            font-size: 13px;
+            flex: 1 1 auto;
+        }
+
+        .theory-section {
+            margin-bottom: 14px;
+        }
+
+        .theory-section h3 {
+            font-size: 14px;
+            margin: 8px 0 4px;
+        }
+
+        .theory-section p {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #e5e7eb;
+            margin: 4px 0;
+        }
+
+        .theory-section ul {
+            padding-left: 18px;
+            margin: 4px 0;
+        }
+
+        .theory-section li {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #d1d5db;
+            margin-bottom: 3px;
+        }
+
+        .theory-callout {
+            border-radius: 12px;
+            border: 1px dashed rgba(148, 163, 184, 0.7);
+            padding: 8px 10px;
+            background: rgba(15, 23, 42, 0.9);
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .theory-callout strong {
+            color: #f9fafb;
+        }
+
+        .theory-summary-note {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 8px;
+        }
+
+        /* Inline math – no boxes */
+        .math {
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        .theory-footer {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #9ca3af;
+            text-align: right;
+        }
+    </style>
+
+
+    <!-- MathJax for formulas -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [
+                    ['\\(', '\\)'],
+                    ['$', '$']
+                ]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+
+<body>
+    <header class="mruv-header">
+        <div class="mruv-header-inner">
+            <h1 class="mruv-title">MRUV Lab</h1>
+            <a href="MechanicsHub.html" class="mruv-back-btn">Back to Mechanics Hub</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="layout">
+            <!-- Left: p5 canvas -->
+            <section class="card">
+                <h2>Uniformly Accelerated Motion</h2>
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 0;">
+                    Now the object has constant acceleration <strong>a</strong>.
+                    We track position and velocity with
+                    <code>x(t) = x₀ + v₀ t + ½ a t²</code> and <code>v(t) = v₀ + a t</code>.
+                </p>
+                <div id="sketch-holder"></div>
+            </section>
+
+            <!-- Right: controls & quick equations -->
+            <section class="card">
+                <h2>Controls</h2>
+
+                <div class="controls-group">
+                    <div class="control-row">
+                        <div class="control-header">
+                            <span>Initial position x₀ (m)</span>
+                            <span class="value" id="x0Label"></span>
+                        </div>
+                        <div class="control-inputs">
+                            <input id="x0Slider" type="range" min="-20" max="20" step="0.5" value="0" />
+                            <input id="x0Input" type="number" step="0.1" value="0" />
+                        </div>
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-header">
+                            <span>Initial velocity v₀ (m/s)</span>
+                            <span class="value" id="v0Label"></span>
+                        </div>
+                        <div class="control-inputs">
+                            <input id="v0Slider" type="range" min="-10" max="10" step="0.5" value="3" />
+                            <input id="v0Input" type="number" step="0.1" value="3" />
+                        </div>
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-header">
+                            <span>Acceleration a (m/s²)</span>
+                            <span class="value" id="aLabel"></span>
+                        </div>
+                        <div class="control-inputs">
+                            <input id="aSlider" type="range" min="-10" max="10" step="0.5" value="0" />
+                            <input id="aInput" type="number" step="0.1" value="0" />
+                        </div>
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-header">
+                            <span>Time scale (×)</span>
+                            <span class="value" id="timeScaleLabel"></span>
+                        </div>
+                        <input id="timeScaleSlider" type="range" min="0.5" max="4" step="0.5" value="1.5" />
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button id="playBtn">▶ Play</button>
+                    <button id="pauseBtn">⏸ Pause</button>
+                    <button id="resetBtn">⟲ Reset</button>
+                </div>
+
+                <div class="equation-box">
+                    <div><strong>MRUV equations</strong></div>
+                    <div style="margin-top: 4px;">
+                        <code>x(t) = x₀ + v₀ · t + ½ a · t²</code><br />
+                        <code>v(t) = v₀ + a · t</code>
+                    </div>
+                    <div id="paramSummary" style="margin-top: 4px; font-size: 11px;">
+                        x₀ = 0.0 m, v₀ = 3.0 m/s, a = 0.0 m/s²
+                    </div>
+                </div>
+
+                <div class="readouts">
+                    <div class="readout">
+                        <div class="readout-label">Simulated time t</div>
+                        <div class="readout-value" id="tReadout">0.00 s</div>
+                    </div>
+                    <div class="readout">
+                        <div class="readout-label">Position x(t)</div>
+                        <div class="readout-value" id="xReadout">0.00 m</div>
+                    </div>
+                    <div class="readout">
+                        <div class="readout-label">Velocity v(t)</div>
+                        <div class="readout-value" id="vReadout">0.00 m/s</div>
+                    </div>
+                    <div class="readout">
+                        <div class="readout-label">Velocity v(t)</div>
+                        <div class="readout-value" id="vReadoutKmh">0.00 km/h</div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <!-- Floating theory button -->
+    <button class="fab-theory" id="openTheoryBtn">+</button>
+
+    <!-- Theory panel -->
+    <div class="theory-overlay" id="theoryOverlay">
+        <aside class="theory-panel">
+            <div class="theory-header">
+                <div>
+                    <div class="theory-pill">MRUV · Theory</div>
+                    <div class="theory-title">Position, velocity &amp; acceleration with calculus</div>
+                </div>
+                <button class="theory-close" id="closeTheoryBtn">&times;</button>
+            </div>
+
+            <div class="theory-body">
+                <!-- Section 1 -->
+                <div class="theory-section">
+                    <h3>1. Position and velocity: <span class="math">\( v = \dfrac{dx}{dt} \)</span></h3>
+                    <p>
+                        We describe motion along a line with a function <span class="math">x(t)</span>, where:
+                    </p>
+                    <ul>
+                        <li><span class="math">x</span> is the position (meters).</li>
+                        <li><span class="math">t</span> is time (seconds).</li>
+                        <li>The graph of <span class="math">x(t)</span> is a curve in a position–time plane.</li>
+                    </ul>
+                    <div class="theory-callout">
+                        <strong>Zoom-in idea:</strong> if you zoom in enough on the curve, it looks like a straight
+                        line. The slope of that tiny line is the
+                        <strong>instantaneous velocity</strong>.
+                    </div>
+                    <p style="margin-top:6px;">
+                        By definition, the instantaneous velocity is
+                        <span class="math">\( v(t) = \dfrac{dx}{dt} \)</span>.
+                        It measures “change of position per unit time”, in m/s.
+                    </p>
+                </div>
+
+                <!-- Section 2 -->
+                <div class="theory-section">
+                    <h3>2. Velocity and acceleration in time: <span class="math">\( a = \dfrac{dv}{dt} \)</span></h3>
+                    <p>
+                        If velocity describes how position changes, acceleration describes how
+                        <strong>velocity</strong> changes:
+                        <span class="math">\( a(t) = \dfrac{dv}{dt} \)</span>.
+                    </p>
+                    <ul>
+                        <li>Units: m/s² (change of m/s per second).</li>
+                        <li><span class="math">a &gt; 0</span>: speed grows in the positive direction.</li>
+                        <li><span class="math">a &lt; 0</span>: the object slows down (or speeds up in the opposite
+                            direction).</li>
+                    </ul>
+                    <div class="theory-callout">
+                        <strong>Geometric view:</strong> on the velocity–time graph,
+                        acceleration is the slope of the curve.
+                    </div>
+                </div>
+
+                <!-- Section 3 -->
+                <div class="theory-section">
+                    <h3>3. Uniformly accelerated motion (MRUV)</h3>
+                    <p>
+                        In MRUV the acceleration is constant:
+                        <span class="math">\( a(t) = a_0 \)</span>.
+                        Integrating step by step:
+                    </p>
+                    <ul>
+                        <li><span class="math">\( v(t) = v_0 + a_0 t \)</span></li>
+                        <li><span class="math">\( x(t) = x_0 + v_0 t + \dfrac{1}{2} a_0 t^2 \)</span></li>
+                    </ul>
+                    <p>
+                        These are exactly the equations driving the curves and the motion in this MRUV Lab.
+                        When you move the sliders for <span class="math">x_0</span>,
+                        <span class="math">v_0</span> and <span class="math">a_0</span>,
+                        you are changing the parameters of these functions.
+                    </p>
+                </div>
+
+                <!-- Section 4 -->
+                <div class="theory-section">
+                    <h3>4. Acceleration as a function of position: <span class="math">\( a = v \, \dfrac{dv}{dx}
+                            \)</span>
+                    </h3>
+                    <p>
+                        Sometimes forces depend directly on position, so it is more natural to think of
+                        <span class="math">a(x)</span> than <span class="math">a(t)</span>. Using the chain rule:
+                    </p>
+                    <ul>
+                        <li>Start with <span class="math">\( a = \dfrac{dv}{dt} \)</span>.</li>
+                        <li>Write <span class="math">\( \dfrac{dv}{dt} = \dfrac{dv}{dx} \dfrac{dx}{dt} \)</span>.</li>
+                        <li>But <span class="math">\( \dfrac{dx}{dt} = v \)</span>.</li>
+                    </ul>
+                    <p>
+                        Therefore <span class="math">\( a = v \, \dfrac{dv}{dx} \)</span>.
+                        Same acceleration, different “coordinates”: one in time, one in position.
+                    </p>
+                    <div class="theory-callout">
+                        <strong>When is this useful?</strong>
+                        <ul>
+                            <li>When the force is given as <span class="math">F(x)</span>.</li>
+                            <li>In energy methods (direct link between kinetic and potential energy).</li>
+                            <li>When integrating with respect to <span class="math">x</span> is easier than with
+                                respect to <span class="math">t</span>.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Section 5 -->
+                <div class="theory-section">
+                    <h3>5. Quick “which equation?” map</h3>
+                    <ul>
+                        <li>
+                            If you know <span class="math">\( x(t) \)</span>:
+                            differentiate once to get <span class="math">\( v(t) = \dfrac{dx}{dt} \)</span> and again to
+                            get <span class="math">\( a(t) = \dfrac{dv}{dt} \)</span>.
+                        </li>
+                        <li>
+                            If acceleration is constant:
+                            integrate <span class="math">\( a \)</span> to get <span class="math">\( v(t) \)</span> and
+                            then <span class="math">\( x(t) \)</span> (MRUV formulas).
+                        </li>
+                        <li>
+                            If you know <span class="math">\( a(x) \)</span> or <span class="math">\( F(x) \)</span>:
+                            use <span class="math">\( a = v \, \dfrac{dv}{dx} \)</span> and integrate with respect to
+                            <span class="math">x</span>.
+                        </li>
+                        <li>
+                            Graphically:
+                            slope of <span class="math">x(t)</span> → <span class="math">v(t)</span>, slope of
+                            <span class="math">v(t)</span> → <span class="math">a(t)</span>.
+                        </li>
+                    </ul>
+                    <p class="theory-summary-note">
+                        The MRUV Lab is just these derivatives and integrals turned into moving plots and a little
+                        “vehicle” on a track.
+                    </p>
+                </div>
+
+                <div class="theory-footer">
+                    Part of the <strong>Physics &amp; Control Systems</strong> collection –
+                    MRUV theory card.
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // ----- State -----
+        let x0 = 0;
+        let v0 = 3;
+        let a = 0;
+        let timeScale = 1.5;
+
+        let simTime = 0;
+        let playing = true;
+
+        const history = []; // {t, x, v}
+        const maxHistoryPoints = 2000;
+        const timeWindow = 10;
+
+        let trackLeftPx, trackRightPx;
+
+        // Smoothed autoscale ranges
+        let xMinView = null,
+            xMaxView = null;
+        let vMinView = null,
+            vMaxView = null;
+
+        // DOM
+        let x0Slider, v0Slider, aSlider, timeScaleSlider;
+        let x0Input, v0Input, aInput;
+        let x0Label, v0Label, aLabel, timeScaleLabel;
+        let playBtn, pauseBtn, resetBtn;
+        let tReadout, xReadout, vReadout, vReadoutKmh, paramSummary;
+
+        function setup() {
+            const holder = document.getElementById("sketch-holder");
+            const w = holder.clientWidth - 4;
+            const h = 480;
+            const canvas = createCanvas(w, h);
+            canvas.parent("sketch-holder");
+            frameRate(60);
+
+            trackLeftPx = 60;
+            trackRightPx = width - 60;
+
+            // Grab DOM
+            x0Slider = document.getElementById("x0Slider");
+            v0Slider = document.getElementById("v0Slider");
+            aSlider = document.getElementById("aSlider");
+            timeScaleSlider = document.getElementById("timeScaleSlider");
+
+            x0Input = document.getElementById("x0Input");
+            v0Input = document.getElementById("v0Input");
+            aInput = document.getElementById("aInput");
+
+            x0Label = document.getElementById("x0Label");
+            v0Label = document.getElementById("v0Label");
+            aLabel = document.getElementById("aLabel");
+            timeScaleLabel = document.getElementById("timeScaleLabel");
+
+            playBtn = document.getElementById("playBtn");
+            pauseBtn = document.getElementById("pauseBtn");
+            resetBtn = document.getElementById("resetBtn");
+
+            tReadout = document.getElementById("tReadout");
+            xReadout = document.getElementById("xReadout");
+            vReadout = document.getElementById("vReadout");
+            vReadoutKmh = document.getElementById("vReadoutKmh");
+            paramSummary = document.getElementById("paramSummary");
+
+
+            syncFromSliders();
+            setupListeners();
+            updateLabels();
+            updateReadouts(0, 0);
+
+            setupTheoryPanel();
+        }
+
+        function windowResized() {
+            const holder = document.getElementById("sketch-holder");
+            if (!holder) return;
+            const w = holder.clientWidth - 4;
+            const h = 380;
+            resizeCanvas(w, h);
+            trackLeftPx = 60;
+            trackRightPx = width - 60;
+        }
+
+        function syncFromSliders() {
+            x0 = parseFloat(x0Slider.value);
+            v0 = parseFloat(v0Slider.value);
+            a = parseFloat(aSlider.value);
+            timeScale = parseFloat(timeScaleSlider.value);
+
+            x0Input.value = x0.toFixed(1);
+            v0Input.value = v0.toFixed(1);
+            aInput.value = a.toFixed(1);
+        }
+
+        function setupListeners() {
+            x0Slider.oninput = () => {
+                x0 = parseFloat(x0Slider.value);
+                x0Input.value = x0.toFixed(1);
+                updateLabels();
+                resetSimulation(true);
+            };
+
+            v0Slider.oninput = () => {
+                v0 = parseFloat(v0Slider.value);
+                v0Input.value = v0.toFixed(1);
+                updateLabels();
+                resetSimulation(true);
+            };
+
+            aSlider.oninput = () => {
+                a = parseFloat(aSlider.value);
+                aInput.value = a.toFixed(1);
+                updateLabels();
+                resetSimulation(true);
+            };
+
+            timeScaleSlider.oninput = () => {
+                timeScale = parseFloat(timeScaleSlider.value);
+                updateLabels();
+            };
+
+            x0Input.addEventListener("change", () => {
+                let v = parseFloat(x0Input.value);
+                if (isNaN(v)) v = 0;
+                v = Math.max(-20, Math.min(20, v));
+                x0Input.value = v.toFixed(1);
+                x0Slider.value = v;
+                x0 = v;
+                updateLabels();
+                resetSimulation(true);
+            });
+
+            v0Input.addEventListener("change", () => {
+                let v = parseFloat(v0Input.value);
+                if (isNaN(v)) v = 0;
+                v = Math.max(-10, Math.min(10, v));
+                v0Input.value = v.toFixed(1);
+                v0Slider.value = v;
+                v0 = v;
+                updateLabels();
+                resetSimulation(true);
+            });
+
+            aInput.addEventListener("change", () => {
+                let v = parseFloat(aInput.value);
+                if (isNaN(v)) v = 0;
+                v = Math.max(-10, Math.min(10, v));
+                aInput.value = v.toFixed(1);
+                aSlider.value = v;
+                a = v;
+                updateLabels();
+                resetSimulation(true);
+            });
+
+            playBtn.onclick = () => playing = true;
+            pauseBtn.onclick = () => playing = false;
+            resetBtn.onclick = () => resetSimulation(true);
+        }
+
+        function resetSimulation(clearHistory) {
+            simTime = 0;
+            if (clearHistory) history.length = 0;
+
+            xMinView = xMaxView = vMinView = vMaxView = null;
+            updateReadouts(0, 0);
+        }
+
+        function updateLabels() {
+            x0Label.textContent = x0.toFixed(1) + " m";
+            v0Label.textContent = v0.toFixed(1) + " m/s";
+            aLabel.textContent = a.toFixed(1) + " m/s²";
+            timeScaleLabel.textContent = "×" + timeScale.toFixed(1);
+            paramSummary.textContent =
+                `x₀ = ${x0.toFixed(1)} m, v₀ = ${v0.toFixed(1)} m/s, a = ${a.toFixed(1)} m/s²`;
+        }
+
+        function updateReadouts(xNow, vNow) {
+            tReadout.textContent = simTime.toFixed(2) + " s";
+            xReadout.textContent = xNow.toFixed(2) + " m";
+            vReadout.textContent = vNow.toFixed(2) + " m/s";
+            const vKmh = vNow * 3.6; // 1 m/s = 3.6 km/h
+            vReadoutKmh.textContent = vKmh.toFixed(2) + " km/h";
+        }
+
+        function xToPixel(x, minX, maxX) {
+            return map(x, minX, maxX, trackLeftPx, trackRightPx);
+        }
+
+        function smoothMin(current, target) {
+            if (current === null || current === undefined) return target;
+            const expanding = target < current;
+            const factor = expanding ? 0.25 : 0.08;
+            return current + (target - current) * factor;
+        }
+
+        function smoothMax(current, target) {
+            if (current === null || current === undefined) return target;
+            const expanding = target > current;
+            const factor = expanding ? 0.25 : 0.08;
+            return current + (target - current) * factor;
+        }
+
+        function draw() {
+            background(3, 7, 18);
+
+            if (playing) {
+                const dt = deltaTime / 1000;
+                simTime += dt * timeScale;
+            }
+
+            const x = x0 + v0 * simTime + 0.5 * a * simTime * simTime;
+            const v = v0 + a * simTime;
+
+            history.push({
+                t: simTime,
+                x,
+                v
+            });
+            if (history.length > maxHistoryPoints) history.shift();
+
+            const centerX = x;
+            const viewHalfRange = 20;
+            const minX = centerX - viewHalfRange;
+            const maxX = centerX + viewHalfRange;
+
+            drawTrackAndObject(x, v, minX, maxX);
+            drawGraphs();
+
+            updateReadouts(x, v);
+        }
+
+        function drawTrackAndObject(x, v, minX, maxX) {
+            const trackY = 130;
+
+            stroke(55, 65, 81);
+            strokeWeight(3);
+            line(trackLeftPx, trackY, trackRightPx, trackY);
+
+            strokeWeight(1.5);
+            const meterStep = 10;
+            const startTick = Math.floor(minX / meterStep) * meterStep;
+            const endTick = Math.ceil(maxX / meterStep) * meterStep;
+            for (let m = startTick; m <= endTick; m += meterStep) {
+                const px = xToPixel(m, minX, maxX);
+                const isMajor = (m % 20 === 0);
+                const h = isMajor ? 18 : 10;
+                line(px, trackY - h / 2, px, trackY + h / 2);
+                if (isMajor) {
+                    noStroke();
+                    fill(148, 163, 184);
+                    textSize(10);
+                    textAlign(CENTER, TOP);
+                    text(m + " m", px, trackY + 10);
+                }
+            }
+
+            if (0 >= minX && 0 <= maxX) {
+                const zeroPx = xToPixel(0, minX, maxX);
+                stroke(248, 250, 252);
+                strokeWeight(2);
+                line(zeroPx, trackY - 22, zeroPx, trackY + 22);
+                noStroke();
+                fill(248, 250, 252);
+                textSize(11);
+                textAlign(CENTER, BOTTOM);
+                text("x = 0", zeroPx, trackY - 24);
+            }
+
+            const objX = xToPixel(x, minX, maxX);
+            const objY = trackY - 20;
+
+            noStroke();
+            fill(59, 130, 246, 60);
+            ellipse(objX, objY + 14, 55, 18);
+
+            fill(59, 130, 246);
+            rectMode(CENTER);
+            rect(objX, objY, 46, 18, 8);
+            fill(129, 140, 248);
+            rect(objX, objY - 8, 24, 12, 6);
+
+            const dir = Math.sign(v);
+            if (dir !== 0) {
+                stroke(94, 234, 212);
+                strokeWeight(2);
+                const arrowY = trackY - 40;
+                const arrowLen = 35 * dir;
+                line(objX, arrowY, objX + arrowLen, arrowY);
+                line(objX + arrowLen, arrowY, objX + arrowLen - 6 * dir, arrowY - 4);
+                line(objX + arrowLen, arrowY, objX + arrowLen - 6 * dir, arrowY + 4);
+                noStroke();
+                fill(148, 163, 184);
+                textSize(11);
+                textAlign(CENTER, BOTTOM);
+
+                const vKmh = v * 3.6;
+                // label showing both units
+                text(
+                    `${v.toFixed(1)} m/s (${vKmh.toFixed(1)} km/h)`,
+                    objX,
+                    arrowY - 4
+                );
+            }
+
+
+            noStroke();
+            fill(226, 232, 240);
+            textSize(14);
+            textAlign(LEFT, TOP);
+            text("MRUV (space view)", trackLeftPx, 20);
+        }
+
+        function drawGraphs() {
+            const graphLeft = 60;
+            const graphRight = width - 40;
+
+            const graphTop = 190;
+            const graphBottom = height - 35;
+
+            const midY = (graphTop + graphBottom) / 2;
+
+            const tMax = Math.max(simTime, 0.5);
+            const tMin = Math.max(0, tMax - timeWindow);
+
+            const visible = history.filter(h => h.t >= tMin && h.t <= tMax);
+
+            let xMinTarget = -40,
+                xMaxTarget = 40;
+            let vMinTarget = -20,
+                vMaxTarget = 20;
+
+            if (visible.length > 0) {
+                const xVals = visible.map(h => h.x);
+                let rawXMin = Math.min(...xVals);
+                let rawXMax = Math.max(...xVals);
+                if (rawXMax === rawXMin) {
+                    rawXMax += 1;
+                    rawXMin -= 1;
+                }
+                let spanX = rawXMax - rawXMin;
+                let padX = spanX * 0.15;
+                if (padX < 1) padX = 1;
+                xMinTarget = rawXMin - padX;
+                xMaxTarget = rawXMax + padX;
+
+                const vVals = visible.map(h => h.v);
+                let rawVMin = Math.min(...vVals);
+                let rawVMax = Math.max(...vVals);
+                if (rawVMax === rawVMin) {
+                    rawVMax += 1;
+                    rawVMin -= 1;
+                }
+                let spanV = rawVMax - rawVMin;
+                let padV = spanV * 0.15;
+                if (padV < 0.5) padV = 0.5;
+                vMinTarget = rawVMin - padV;
+                vMaxTarget = rawVMax + padV;
+            }
+
+            xMinView = (xMinView === null) ? xMinTarget : smoothMin(xMinView, xMinTarget);
+            xMaxView = (xMaxView === null) ? xMaxTarget : smoothMax(xMaxView, xMaxTarget);
+            vMinView = (vMinView === null) ? vMinTarget : smoothMin(vMinView, vMinTarget);
+            vMaxView = (vMaxView === null) ? vMaxTarget : smoothMax(vMaxView, vMaxTarget);
+
+            drawXTSubgraph(
+                graphLeft,
+                graphRight,
+                graphTop,
+                midY - 6,
+                tMin,
+                tMax,
+                xMinView,
+                xMaxView,
+                visible
+            );
+
+            drawVTSubgraph(
+                graphLeft,
+                graphRight,
+                midY + 6,
+                graphBottom,
+                tMin,
+                tMax,
+                vMinView,
+                vMaxView,
+                visible
+            );
+        }
+
+        function drawXTSubgraph(left, right, top, bottom, tMin, tMax, xMin, xMax, visible) {
+            stroke(55, 65, 81);
+            strokeWeight(1.5);
+            fill(15, 23, 42, 200);
+            rectMode(CORNERS);
+            rect(left, top, right, bottom, 10);
+
+            const axisX = bottom - 18;
+            const axisY = left + 40;
+
+            stroke(148, 163, 184);
+            strokeWeight(1);
+            line(left + 30, axisX, right - 10, axisX);
+            line(axisY, bottom - 10, axisY, top + 10);
+
+            noStroke();
+            fill(148, 163, 184);
+            textSize(11);
+            textAlign(LEFT, TOP);
+            text("x–t graph", left + 10, top + 6);
+            textSize(10);
+            text(`t [s]`, right - 35, top + 6);
+
+            const xRange = xMax - xMin;
+            let xStep = 20;
+            if (xRange < 80) xStep = 10;
+            if (xRange < 40) xStep = 5;
+
+            const ticks = [];
+            for (let xv = Math.ceil(xMin / xStep) * xStep; xv <= xMax; xv += xStep) {
+                ticks.push(xv);
+            }
+
+            const maxLabels = 4;
+            const stride = Math.max(1, Math.ceil(ticks.length / maxLabels));
+
+            textSize(9);
+            for (let i = 0; i < ticks.length; i++) {
+                const xv = ticks[i];
+                const py = map(xv, xMin, xMax, bottom - 20, top + 24);
+
+                stroke(75, 85, 99);
+                strokeWeight(1);
+                line(axisY - 4, py, axisY + 4, py);
+
+                if (i % stride === 0) {
+                    noStroke();
+                    fill(156, 163, 175);
+                    textAlign(RIGHT, CENTER);
+                    text(xv.toFixed(0) + " m", axisY - 8, py);
+                }
+            }
+
+            const tRange = tMax - tMin;
+            let tStep = 2;
+            if (tRange < 6) tStep = 1;
+            if (tRange > 16) tStep = 4;
+
+            for (let tv = Math.ceil(tMin / tStep) * tStep; tv <= tMax; tv += tStep) {
+                const px = map(tv, tMin, tMax, axisY, right - 20);
+                stroke(75, 85, 99);
+                strokeWeight(1);
+                line(px, axisX - 4, px, axisX + 4);
+                noStroke();
+                fill(156, 163, 175);
+                textAlign(CENTER, TOP);
+                text(tv.toFixed(0), px, axisX + 6);
+            }
+
+            if (visible.length >= 2) {
+                stroke(96, 165, 250);
+                strokeWeight(2);
+                noFill();
+                beginShape();
+                for (const h of visible) {
+                    const px = map(h.t, tMin, tMax, axisY, right - 20);
+                    const py = map(h.x, xMin, xMax, bottom - 20, top + 24);
+                    vertex(px, py);
+                }
+                endShape();
+            }
+        }
+
+        function drawVTSubgraph(left, right, top, bottom, tMin, tMax, vMin, vMax, visible) {
+            stroke(55, 65, 81);
+            strokeWeight(1.5);
+            fill(15, 23, 42, 200);
+            rectMode(CORNERS);
+            rect(left, top, right, bottom, 10);
+
+            const axisX = bottom - 18;
+            const axisY = left + 40;
+
+            stroke(148, 163, 184);
+            strokeWeight(1);
+            line(left + 30, axisX, right - 10, axisX);
+            line(axisY, bottom - 10, axisY, top + 10);
+
+            noStroke();
+            fill(148, 163, 184);
+            textSize(11);
+            textAlign(LEFT, TOP);
+            text("v–t graph", left + 10, top + 6);
+            textSize(10);
+            text(`t [s]`, right - 35, top + 6);
+
+            const vRange = vMax - vMin;
+            let vStep = 10;
+            if (vRange < 40) vStep = 5;
+            if (vRange < 20) vStep = 2;
+
+            textSize(9);
+            for (let vv = Math.ceil(vMin / vStep) * vStep; vv <= vMax; vv += vStep) {
+                const py = map(vv, vMin, vMax, bottom - 20, top + 24);
+                stroke(75, 85, 99);
+                strokeWeight(1);
+                line(axisY - 4, py, axisY + 4, py);
+                noStroke();
+                fill(156, 163, 175);
+                textAlign(RIGHT, CENTER);
+                text(vv.toFixed(0) + " m/s", axisY - 8, py);
+            }
+
+            const tRange = tMax - tMin;
+            let tStep = 2;
+            if (tRange < 6) tStep = 1;
+            if (tRange > 16) tStep = 4;
+
+            for (let tv = Math.ceil(tMin / tStep) * tStep; tv <= tMax; tv += tStep) {
+                const px = map(tv, tMin, tMax, axisY, right - 20);
+                stroke(75, 85, 99);
+                strokeWeight(1);
+                line(px, axisX - 4, px, axisX + 4);
+                noStroke();
+                fill(156, 163, 175);
+                textAlign(CENTER, TOP);
+                text(tv.toFixed(0), px, axisX + 6);
+            }
+
+            if (visible.length >= 2) {
+                stroke(52, 211, 153);
+                strokeWeight(2);
+                noFill();
+                beginShape();
+                for (const h of visible) {
+                    const px = map(h.t, tMin, tMax, axisY, right - 20);
+                    const py = map(h.v, vMin, vMax, bottom - 20, top + 24);
+                    vertex(px, py);
+                }
+                endShape();
+            }
+        }
+
+        // --- Theory panel logic ---
+        function setupTheoryPanel() {
+            const overlay = document.getElementById("theoryOverlay");
+            const openBtn = document.getElementById("openTheoryBtn");
+            const closeBtn = document.getElementById("closeTheoryBtn");
+
+            const open = () => overlay.classList.add("open");
+            const close = () => overlay.classList.remove("open");
+
+            openBtn.addEventListener("click", open);
+            closeBtn.addEventListener("click", close);
+            overlay.addEventListener("click", (e) => {
+                if (e.target === overlay) close();
+            });
+
+            // ESC to close
+            window.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") close();
+            });
+        }
+    </script>
+</body>
+
+</html>

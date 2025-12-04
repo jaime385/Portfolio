@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Uniform Rectilinear Motion · MRU Lab</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            background: #050314;
+            color: #e5e7eb;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        /* --- MRU Lab Header --- */
+
+        .mru-header {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            backdrop-filter: blur(10px);
+            background: rgba(10, 10, 15, 0.55);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .mru-header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 14px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mru-title {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #e5e7eb;
+            letter-spacing: 0.5px;
+        }
+
+        .mru-back-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e5e7eb;
+            text-decoration: none;
+            transition: all 0.18s ease;
+        }
+
+        .mru-back-btn:hover {
+            background: rgba(127, 255, 212, 0.12);
+            border-color: rgba(127, 255, 212, 0.55);
+            box-shadow: 0 0 12px rgba(127, 255, 212, 0.25);
+        }
+
+        .chip {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+            gap: 18px;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        .card {
+            border-radius: 18px;
+            border: 1px solid rgba(31, 41, 55, 0.9);
+            background: radial-gradient(circle at top,
+                    rgba(15, 23, 42, 0.9),
+                    rgba(3, 7, 18, 0.98));
+            padding: 14px 16px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+        }
+
+        .card h2 {
+            font-size: 15px;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        #sketch-holder {
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        #sketch-holder canvas {
+            display: block;
+        }
+
+        .controls-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .control-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .control-header span.value {
+            color: #a5b4fc;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .control-inputs {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .control-inputs input[type="range"] {
+            flex: 1;
+        }
+
+        .control-inputs input[type="number"] {
+            width: 70px;
+            padding: 3px 6px;
+            border-radius: 8px;
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7eb;
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .control-inputs input[type="number"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.8);
+            border-color: rgba(129, 140, 248, 0.9);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.8);
+            background: radial-gradient(circle at top,
+                    rgba(37, 99, 235, 0.22),
+                    rgba(15, 23, 42, 0.95));
+            color: #e5e7eb;
+            font-size: 12px;
+            cursor: pointer;
+            transition: transform 0.08s ease, box-shadow 0.08s ease,
+                background 0.15s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .equation-box {
+            font-size: 12px;
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px dashed rgba(148, 163, 184, 0.6);
+            background: rgba(15, 23, 42, 0.85);
+        }
+
+        .equation-box code {
+            font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+                Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 11px;
+        }
+
+        .readouts {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .readout {
+            font-size: 12px;
+            padding: 6px 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(55, 65, 81, 0.8);
+            background: rgba(15, 23, 42, 0.92);
+        }
+
+        .readout-label {
+            color: #9ca3af;
+            font-size: 11px;
+        }
+
+        .readout-value {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .exercise-box {
+            font-size: 12px;
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(34, 197, 94, 0.7);
+            background: rgba(6, 95, 70, 0.25);
+        }
+
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .exercise-buttons {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .exercise-status {
+            font-size: 11px;
+            margin-top: 6px;
+            white-space: pre-wrap;
+        }
+
+        .exercise-status.ok {
+            color: #4ade80;
+        }
+
+        .exercise-status.bad {
+            color: #f97373;
+        }
+
+        .exercise-work {
+            margin-top: 6px;
+            font-size: 11px;
+            font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+                Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            white-space: pre-wrap;
+            color: #e5e7eb;
+        }
+
+        /* --- Feedback animations --- */
+
+        @keyframes correctGlow {
+            0% {
+                box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(34, 197, 94, 0.45);
+                transform: scale(1.01);
+            }
+
+            100% {
+                box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+                transform: scale(1);
+            }
+        }
+
+        @keyframes wrongShake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-6px);
+            }
+
+            40% {
+                transform: translateX(6px);
+            }
+
+            60% {
+                transform: translateX(-4px);
+            }
+
+            80% {
+                transform: translateX(4px);
+            }
+        }
+
+        body.flash-correct main {
+            animation: correctGlow 0.7s ease-out;
+        }
+
+        body.flash-wrong main {
+            animation: wrongShake 0.6s ease;
+        }
+
+        /* --- Theory panel + FAB button --- */
+
+        .fab-theory {
+            position: fixed;
+            right: 28px;
+            bottom: 28px;
+            width: 52px;
+            height: 52px;
+            border-radius: 999px;
+            border: 1px solid rgba(74, 222, 128, 0.6);
+            background: radial-gradient(circle at center,
+                    rgba(74, 222, 128, 0.25),
+                    rgba(15, 23, 42, 1));
+            color: #ecfdf5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            cursor: pointer;
+            box-shadow: 0 0 22px rgba(34, 197, 94, 0.4);
+            z-index: 60;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+        }
+
+        .fab-theory:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 0 32px rgba(34, 197, 94, 0.6);
+        }
+
+        .theory-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at top right,
+                    rgba(56, 189, 248, 0.12),
+                    transparent 55%),
+                rgba(3, 7, 18, 0.78);
+            backdrop-filter: blur(14px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.22s ease;
+            z-index: 55;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .theory-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .theory-panel {
+            position: relative;
+            width: min(520px, 100%);
+            max-width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top left,
+                    rgba(129, 140, 248, 0.16),
+                    transparent 60%),
+                rgba(10, 10, 25, 0.98);
+            border-left: 1px solid rgba(148, 163, 184, 0.25);
+            padding: 18px 22px 20px;
+            box-shadow: -24px 0 50px rgba(15, 23, 42, 0.95);
+            transform: translateX(100%);
+            transition: transform 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .theory-overlay.open .theory-panel {
+            transform: translateX(0);
+        }
+
+        .theory-close {
+            position: absolute;
+            top: 14px;
+            right: 22px;
+            appearance: none;
+            border-radius: 999px;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7eb;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+            transition: transform 0.1s ease, box-shadow 0.12s ease,
+                background 0.12s ease, border-color 0.12s ease;
+        }
+
+        .theory-close:hover {
+            background: rgba(30, 64, 175, 0.9);
+            border-color: rgba(191, 219, 254, 0.9);
+            transform: translateY(-1px);
+            box-shadow: 0 0 14px rgba(59, 130, 246, 0.5);
+        }
+
+        .theory-pill {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+            color: #cbd5f5;
+        }
+
+        .theory-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .theory-header {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 10px;
+            padding-right: 40px;
+        }
+
+        .theory-body {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(31, 41, 55, 0.9);
+            overflow-y: auto;
+            font-size: 13px;
+            flex: 1 1 auto;
+        }
+
+        .theory-section {
+            margin-bottom: 14px;
+        }
+
+        .theory-section h3 {
+            font-size: 14px;
+            margin: 8px 0 4px;
+        }
+
+        .theory-section p {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #e5e7eb;
+            margin: 4px 0;
+        }
+
+        .theory-section ul {
+            padding-left: 18px;
+            margin: 4px 0;
+        }
+
+        .theory-section li {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #d1d5db;
+            margin-bottom: 3px;
+        }
+
+        .theory-callout {
+            border-radius: 12px;
+            border: 1px dashed rgba(148, 163, 184, 0.7);
+            padding: 8px 10px;
+            background: rgba(15, 23, 42, 0.9);
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .theory-callout strong {
+            color: #f9fafb;
+        }
+
+        .theory-summary-note {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 8px;
+        }
+
+        .math {
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        .theory-footer {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #9ca3af;
+            text-align: right;
+        }
+    </style>
+
+    <!-- MathJax for formulas (same config as MRUV) -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [
+                    ['\\(', '\\)'],
+                    ['$', '$']
+                ]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+
+<body>
+    <header class="mru-header">
+        <div class="mru-header-inner">
+            <h1 class="mru-title">MRU Lab</h1>
+            <a href="../Mechanics/MechanicsHub.html" class="mru-back-btn">
+                Back to Mechanics Hub
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <div class="layout">
+            <!-- Left: p5 canvas -->
+            <section class="card">
+                <h2>Uniform Rectilinear Motion</h2>
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 0;">
+                    The object moves in a straight line with constant velocity.
+                    Adjust <strong>x₀</strong> and <strong>v</strong>.
+                    The view follows the object so it is always visible, and the x–t
+                    graph scrolls in time.
+                </p>
+                <div id="sketch-holder"></div>
+            </section>
+
+            <!-- Right: controls & theory -->
+            <section class="card">
+                <h2>Controls</h2>
+
+                <div class="controls-group">
+                    <!-- x0 control -->
+                    <div class="control-row">
+                        <div class="control-header">
+                            <span>Initial position x₀ (m)</span>
+                            <span class="value" id="x0Label"></span>
+                        </div>
+                        <div class="control-inputs">
+                            <input id="x0Slider" type="range" min="-20" max="20" step="0.5" value="0" />
+                            <input id="x0Input" type="number" step="0.1" value="0" />
+                        </div>
+                    </div>
+
+                    <!-- v control -->
+                    <div class="control-row">
+                        <div class="control-header">
+                            <span>Velocity v (m/s)</span>
+                            <span class="value" id="vLabel"></span>
+                        </div>
+                        <div class="control-inputs">
+                            <input id="vSlider" type="range" min="-10" max="10" step="0.5" value="3" />
+                            <input id="vInput" type="number" step="0.1" value="3" />
+                        </div>
+                    </div>
+
+                    <!-- time scale -->
+                    <div class="control-row">
+                        <div class="control-header">
+                            <span>Time scale (×)</span>
+                            <span class="value" id="timeScaleLabel"></span>
+                        </div>
+                        <input id="timeScaleSlider" type="range" min="0.5" max="4" step="0.5" value="1.5" />
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button id="playBtn">▶ Play</button>
+                    <button id="pauseBtn">⏸ Pause</button>
+                    <button id="resetBtn">⟲ Reset</button>
+                </div>
+
+                <div class="equation-box">
+                    <div><strong>MRU equation</strong></div>
+                    <div style="margin-top: 4px;">
+                        <code>x(t) = x₀ + v · t</code>
+                    </div>
+                    <div id="paramSummary" style="margin-top: 4px; font-size: 11px;">
+                        x₀ = 0.0 m, v = 3.0 m/s
+                    </div>
+                </div>
+
+                <div class="readouts">
+                    <div class="readout">
+                        <div class="readout-label">Simulated time t</div>
+                        <div class="readout-value" id="tReadout">0.00 s</div>
+                    </div>
+                    <div class="readout">
+                        <div class="readout-label">Position x(t)</div>
+                        <div class="readout-value" id="xReadout">0.00 m</div>
+                    </div>
+                </div>
+
+                <!-- Exercise mode -->
+                <div class="exercise-box">
+                    <div class="exercise-header">
+                        <span><strong>Exercise mode</strong></span>
+                        <span style="font-size: 10px; color: #bbf7d0;">Target shown in x–t graph</span>
+                    </div>
+                    <div id="exerciseTarget">Target: —</div>
+                    <div class="exercise-buttons">
+                        <button id="newExerciseBtn" style="flex: 1;">🎯 New exercise</button>
+                        <button id="checkExerciseBtn" style="flex: 1;">✔ Check answer</button>
+                    </div>
+                    <div id="exerciseStatus" class="exercise-status">
+                        Use x(t) = x₀ + v·t to solve the problem.
+                    </div>
+                    <div id="exerciseWork" class="exercise-work"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Floating theory button -->
+    <button class="fab-theory" id="openTheoryBtn">+</button>
+
+    <!-- Theory panel (same theory content as MRUV) -->
+    <div class="theory-overlay" id="theoryOverlay">
+        <aside class="theory-panel">
+            <div class="theory-header">
+                <div>
+                    <div class="theory-pill">MRU · Theory</div>
+                    <div class="theory-title">Position &amp; velocity in MRU</div>
+                </div>
+                <button class="theory-close" id="closeTheoryBtn">&times;</button>
+            </div>
+
+            <div class="theory-body">
+                <!-- Section 1 -->
+                <div class="theory-section">
+                    <h3>1. What “uniform rectilinear motion” means</h3>
+                    <p>
+                        In MRU the object moves along a straight line with
+                        <strong>constant velocity</strong>. We describe the motion with
+                        a function <span class="math">x(t)</span>:
+                    </p>
+                    <ul>
+                        <li><span class="math">x</span>: position along the line (meters).</li>
+                        <li><span class="math">t</span>: time (seconds).</li>
+                        <li>The graph of <span class="math">x(t)</span> is a straight line in the x–t plane.</li>
+                    </ul>
+                    <div class="theory-callout">
+                        In MRU the velocity doesn’t change with time, so the motion is completely
+                        described by a single straight line on the x–t graph.
+                    </div>
+                </div>
+
+                <!-- Section 2 -->
+                <div class="theory-section">
+                    <h3>2. MRU equation: <span class="math">\( x(t) = x_{0} + v\,t \)</span></h3>
+                    <p>
+                        The position at any time <span class="math">t</span> is
+                        <span class="math">\( x(t) = x_0 + v t \)</span>, where:
+                    </p>
+                    <ul>
+                        <li><span class="math">x_0</span> is the initial position at <span class="math">t = 0</span>.
+                        </li>
+                        <li><span class="math">v</span> is the constant velocity (m/s).</li>
+                    </ul>
+                    <div class="theory-callout">
+                        On the x–t graph:
+                        <ul>
+                            <li><span class="math">x_0</span> is the vertical intercept (where the line cuts the x–axis
+                                at t = 0).</li>
+                            <li><span class="math">v</span> is the slope of the line (rise/run).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Section 3 -->
+                <div class="theory-section">
+                    <h3>3. Reading the x–t graph</h3>
+                    <p>
+                        Because the motion is uniform, the x–t graph is always a straight line:
+                    </p>
+                    <ul>
+                        <li>
+                            A <strong>steeper line</strong> means a larger speed
+                            <span class="math">|v|</span>.
+                        </li>
+                        <li>
+                            A line that goes up as time increases means <span class="math">v &gt; 0</span>
+                            (motion in the positive direction).
+                        </li>
+                        <li>
+                            A line that goes down as time increases means <span class="math">v &lt; 0</span>
+                            (motion in the negative direction).
+                        </li>
+                        <li>
+                            A horizontal line means <span class="math">v = 0</span> (the object is at rest).
+                        </li>
+                    </ul>
+                    <div class="theory-callout">
+                        If you know two points of the line, you can compute the velocity:
+                        <br />
+                        <span class="math">\( v = \dfrac{\Delta x}{\Delta t} =
+                            \dfrac{x_2 - x_1}{t_2 - t_1} \)</span>.
+                    </div>
+                </div>
+
+                <!-- Section 4 -->
+                <div class="theory-section">
+                    <h3>4. How this MRU Lab uses the equation</h3>
+                    <ul>
+                        <li>
+                            The slider <strong>x₀</strong> changes the intercept of the line:
+                            you slide the entire motion left/right along the x–axis.
+                        </li>
+                        <li>
+                            The slider <strong>v</strong> changes the slope of the line:
+                            you make the object move faster, slower, or in the opposite direction.
+                        </li>
+                        <li>
+                            The <strong>space view</strong> shows the object on a track centered
+                            around its current position.
+                        </li>
+                        <li>
+                            The <strong>x–t graph</strong> shows the line
+                            <span class="math">\( x(t) = x_0 + v t \)</span> as time goes by.
+                        </li>
+                    </ul>
+                    <div class="theory-callout">
+                        In the exercise mode, the green target point represents a specific
+                        condition <span class="math">\( (t_{\text{target}}, x_{\text{target}}) \)</span>.
+                        Your job is to choose <span class="math">x₀</span> or
+                        <span class="math">v</span> so that the line
+                        <span class="math">\( x(t) = x_0 + v t \)</span> passes through that point.
+                    </div>
+                    <p class="theory-summary-note">
+                        This lab turns the basic MRU equation into interactive plots so you can
+                        explore how position and velocity behave when speed is constant.
+                    </p>
+                </div>
+
+                <div class="theory-footer">
+                    Part of the <strong>Physics &amp; Control Systems</strong> collection –
+                    MRU theory card.
+                </div>
+            </div>
+    </div>
+    </aside>
+    </div>
+
+    <script>
+        // ----- Simulation state -----
+        let x0 = 0; // initial position (m)
+        let v = 3; // velocity (m/s)
+        let timeScale = 1.5; // simulation speed multiplier
+
+        let simTime = 0; // simulated time (s)
+        let playing = true;
+
+        const viewHalfRange = 20; // meters to each side of the object
+
+        let trackLeftPx, trackRightPx;
+
+        const history = [];
+        const maxHistoryPoints = 2000;
+        const timeWindow = 10; // seconds visible in the x-t graph window
+
+        // Exercise mode state
+        let targetT = null;
+        let targetX = null;
+        let solutionX0 = null;
+        let solutionV = null;
+        let givenParam = null;
+        let showSolutionCurve = false;
+
+        // DOM elements
+        let x0Slider, vSlider, timeScaleSlider;
+        let x0Input, vInput;
+        let x0Label, vLabel, timeScaleLabel;
+        let playBtn, pauseBtn, resetBtn;
+        let tReadout, xReadout, paramSummary;
+        let newExerciseBtn, checkExerciseBtn, exerciseTargetEl, exerciseStatusEl, exerciseWorkEl;
+
+        function setup() {
+            const holder = document.getElementById("sketch-holder");
+            const w = holder.clientWidth - 4;
+            const h = 360;
+            const canvas = createCanvas(w, h);
+            canvas.parent("sketch-holder");
+            frameRate(60);
+
+            trackLeftPx = 60;
+            trackRightPx = width - 60;
+
+            // Get HTML elements
+            x0Slider = document.getElementById("x0Slider");
+            vSlider = document.getElementById("vSlider");
+            timeScaleSlider = document.getElementById("timeScaleSlider");
+
+            x0Input = document.getElementById("x0Input");
+            vInput = document.getElementById("vInput");
+
+            x0Label = document.getElementById("x0Label");
+            vLabel = document.getElementById("vLabel");
+            timeScaleLabel = document.getElementById("timeScaleLabel");
+
+            playBtn = document.getElementById("playBtn");
+            pauseBtn = document.getElementById("pauseBtn");
+            resetBtn = document.getElementById("resetBtn");
+
+            tReadout = document.getElementById("tReadout");
+            xReadout = document.getElementById("xReadout");
+            paramSummary = document.getElementById("paramSummary");
+
+            newExerciseBtn = document.getElementById("newExerciseBtn");
+            checkExerciseBtn = document.getElementById("checkExerciseBtn");
+            exerciseTargetEl = document.getElementById("exerciseTarget");
+            exerciseStatusEl = document.getElementById("exerciseStatus");
+            exerciseWorkEl = document.getElementById("exerciseWork");
+
+            // Initialize values from sliders
+            syncFromSliders();
+
+            // Slider listeners
+            x0Slider.oninput = () => {
+                if (x0Slider.disabled) return;
+                x0 = parseFloat(x0Slider.value);
+                x0Input.value = x0.toFixed(1);
+                updateLabels();
+                resetSimulation(false);
+            };
+
+            vSlider.oninput = () => {
+                if (vSlider.disabled) return;
+                v = parseFloat(vSlider.value);
+                vInput.value = v.toFixed(1);
+                updateLabels();
+            };
+
+            timeScaleSlider.oninput = () => {
+                timeScale = parseFloat(timeScaleSlider.value);
+                updateLabels();
+            };
+
+            // Number inputs
+            x0Input.addEventListener("change", () => {
+                if (x0Input.disabled) return;
+                let val = parseFloat(x0Input.value);
+                if (isNaN(val)) val = 0;
+                val = Math.max(-20, Math.min(20, val));
+                x0Input.value = val.toFixed(1);
+                x0Slider.value = val;
+                x0 = val;
+                updateLabels();
+                resetSimulation(false);
+            });
+
+            vInput.addEventListener("change", () => {
+                if (vInput.disabled) return;
+                let val = parseFloat(vInput.value);
+                if (isNaN(val)) val = 0;
+                val = Math.max(-10, Math.min(10, val));
+                vInput.value = val.toFixed(1);
+                vSlider.value = val;
+                v = val;
+                updateLabels();
+            });
+
+            // Play / Pause / Reset
+            playBtn.onclick = () => {
+                playing = true;
+            };
+            pauseBtn.onclick = () => {
+                playing = false;
+            };
+            resetBtn.onclick = () => {
+                resetSimulation(true);
+            };
+
+            // Exercise mode
+            newExerciseBtn.onclick = () => {
+                createNewExercise();
+            };
+            checkExerciseBtn.onclick = () => {
+                checkExercise();
+            };
+
+            updateLabels();
+            updateReadouts();
+
+            // Theory panel
+            setupTheoryPanel();
+        }
+
+        function windowResized() {
+            const holder = document.getElementById("sketch-holder");
+            if (!holder) return;
+            const w = holder.clientWidth - 4;
+            const h = 360;
+            resizeCanvas(w, h);
+            trackLeftPx = 60;
+            trackRightPx = width - 60;
+        }
+
+        function syncFromSliders() {
+            x0 = parseFloat(x0Slider.value);
+            v = parseFloat(vSlider.value);
+            timeScale = parseFloat(timeScaleSlider.value);
+
+            x0Input.value = x0.toFixed(1);
+            vInput.value = v.toFixed(1);
+        }
+
+        function resetSimulation(clearHistory) {
+            simTime = 0;
+            if (clearHistory) history.length = 0;
+            updateReadouts();
+        }
+
+        function updateLabels() {
+            x0Label.textContent = x0.toFixed(1) + " m";
+            vLabel.textContent = v.toFixed(1) + " m/s";
+            timeScaleLabel.textContent = "×" + timeScale.toFixed(1);
+            paramSummary.textContent =
+                `x₀ = ${x0.toFixed(1)} m, v = ${v.toFixed(1)} m/s`;
+        }
+
+        function updateReadouts(currentX) {
+            tReadout.textContent = simTime.toFixed(2) + " s";
+            const xVal = (typeof currentX === "number") ? currentX : x0;
+            xReadout.textContent = xVal.toFixed(2) + " m";
+        }
+
+        function xToPixel(x, minX, maxX) {
+            return map(x, minX, maxX, trackLeftPx, trackRightPx);
+        }
+
+        function draw() {
+            background(3, 7, 18);
+
+            if (playing) {
+                const dt = deltaTime / 1000;
+                simTime += dt * timeScale;
+            }
+
+            const x = x0 + v * simTime;
+
+            history.push({
+                t: simTime,
+                x: x
+            });
+            if (history.length > maxHistoryPoints) {
+                history.shift();
+            }
+
+            const centerX = x;
+            const minX = centerX - viewHalfRange;
+            const maxX = centerX + viewHalfRange;
+
+            drawTrackAndObject(x, minX, maxX);
+            drawXTGraph();
+            updateReadouts(x);
+        }
+
+        function drawTrackAndObject(x, minX, maxX) {
+            const trackY = 130;
+
+            stroke(55, 65, 81);
+            strokeWeight(3);
+            line(trackLeftPx, trackY, trackRightPx, trackY);
+
+            strokeWeight(1.5);
+            const meterStep = 10;
+            const startTick = Math.floor(minX / meterStep) * meterStep;
+            const endTick = Math.ceil(maxX / meterStep) * meterStep;
+
+            for (let m = startTick; m <= endTick; m += meterStep) {
+                const px = xToPixel(m, minX, maxX);
+                const isMajor = (m % 20 === 0);
+                const h = isMajor ? 18 : 10;
+                line(px, trackY - h / 2, px, trackY + h / 2);
+
+                if (isMajor) {
+                    noStroke();
+                    fill(148, 163, 184);
+                    textSize(10);
+                    textAlign(CENTER, TOP);
+                    text(m + " m", px, trackY + 10);
+                }
+            }
+
+            if (0 >= minX && 0 <= maxX) {
+                const zeroPx = xToPixel(0, minX, maxX);
+                stroke(248, 250, 252);
+                strokeWeight(2);
+                line(zeroPx, trackY - 22, zeroPx, trackY + 22);
+                noStroke();
+                fill(248, 250, 252);
+                textSize(11);
+                textAlign(CENTER, BOTTOM);
+                text("x = 0", zeroPx, trackY - 24);
+            }
+
+            const objX = xToPixel(x, minX, maxX);
+            const objY = trackY - 20;
+
+            noStroke();
+            fill(59, 130, 246, 60);
+            ellipse(objX, objY + 14, 55, 18);
+
+            fill(59, 130, 246);
+            rectMode(CENTER);
+            rect(objX, objY, 46, 18, 8);
+
+            fill(129, 140, 248);
+            rect(objX, objY - 8, 24, 12, 6);
+
+            const dir = Math.sign(v);
+            if (dir !== 0) {
+                stroke(94, 234, 212);
+                strokeWeight(2);
+                const arrowY = trackY - 40;
+                const arrowLen = 35 * dir;
+                line(objX, arrowY, objX + arrowLen, arrowY);
+                line(objX + arrowLen, arrowY, objX + arrowLen - 6 * dir, arrowY - 4);
+                line(objX + arrowLen, arrowY, objX + arrowLen - 6 * dir, arrowY + 4);
+                noStroke();
+                fill(148, 163, 184);
+                textSize(11);
+                textAlign(CENTER, BOTTOM);
+                text(v.toFixed(1) + " m/s", objX, arrowY - 4);
+            }
+
+            noStroke();
+            fill(226, 232, 240);
+            textSize(14);
+            textAlign(LEFT, TOP);
+            text("Uniform Rectilinear Motion (space view)", trackLeftPx, 20);
+        }
+
+        function drawXTGraph() {
+            const graphLeft = 60;
+            const graphRight = width - 40;
+            const graphTop = 200;
+            const graphBottom = height - 35;
+
+            stroke(55, 65, 81);
+            strokeWeight(1.5);
+            fill(15, 23, 42, 200);
+            rectMode(CORNERS);
+            rect(graphLeft, graphTop, graphRight, graphBottom, 10);
+
+            const axisX = graphBottom - 18;
+            const axisY = graphLeft + 40;
+
+            stroke(148, 163, 184);
+            strokeWeight(1);
+            line(graphLeft + 30, axisX, graphRight - 10, axisX);
+            line(axisY, graphBottom - 10, axisY, graphTop + 10);
+
+            noStroke();
+            fill(148, 163, 184);
+            textSize(11);
+            textAlign(LEFT, CENTER);
+            text("t [s]", graphRight - 35, axisX - 12);
+            textAlign(CENTER, TOP);
+            text("x [m]", axisY - 22, graphTop + 6);
+
+            const tMax = Math.max(simTime, 0.5);
+            const tMin = Math.max(0, tMax - timeWindow);
+
+            textAlign(LEFT, TOP);
+            textSize(10);
+            fill(156, 163, 175);
+            const label = `Time window: [${tMin.toFixed(1)}, ${tMax.toFixed(1)}] s`;
+            text(label, graphLeft + 50, graphTop + 10);
+
+            const xMinGraph = -40;
+            const xMaxGraph = 40;
+
+            const xStep = 20;
+            textSize(10);
+            for (let xv = xMinGraph; xv <= xMaxGraph; xv += xStep) {
+                const py = map(xv, xMinGraph, xMaxGraph, graphBottom - 20, graphTop + 24);
+                stroke(75, 85, 99);
+                strokeWeight(1);
+                line(axisY - 4, py, axisY + 4, py);
+                noStroke();
+                fill(156, 163, 175);
+                textAlign(RIGHT, CENTER);
+                text(xv + " m", axisY - 8, py);
+            }
+
+            const tStep = 2;
+            for (let tv = Math.ceil(tMin); tv <= tMax; tv += tStep) {
+                const px = map(tv, tMin, tMax, axisY, graphRight - 20);
+                stroke(75, 85, 99);
+                strokeWeight(1);
+                line(px, axisX - 4, px, axisX + 4);
+                noStroke();
+                fill(156, 163, 175);
+                textAlign(CENTER, TOP);
+                text(tv.toFixed(0), px, axisX + 6);
+            }
+
+            if (targetT !== null && targetX !== null) {
+                if (targetT >= tMin && targetT <= tMax) {
+                    const pxT = map(targetT, tMin, tMax, axisY, graphRight - 20);
+                    const pyT = map(targetX, xMinGraph, xMaxGraph, graphBottom - 20, graphTop + 24);
+
+                    stroke(52, 211, 153);
+                    strokeWeight(1.5);
+                    const r = 9;
+                    noFill();
+                    ellipse(pxT, pyT, r * 2, r * 2);
+                    line(pxT - r - 3, pyT, pxT + r + 3, pyT);
+                    line(pxT, pyT - r - 3, pxT, pyT + r + 3);
+
+                    noStroke();
+                    fill(52, 211, 153);
+                    textSize(10);
+                    textAlign(LEFT, BOTTOM);
+                    text(`Target`, pxT + 8, pyT - 4);
+                    textAlign(LEFT, TOP);
+                    text(`t=${targetT.toFixed(1)} s, x=${targetX.toFixed(1)} m`, pxT + 8, pyT + 2);
+                }
+            }
+
+            if (showSolutionCurve && solutionX0 !== null && solutionV !== null) {
+                stroke(244, 114, 182);
+                strokeWeight(1.8);
+                noFill();
+                const steps = 80;
+                beginShape();
+                for (let i = 0; i <= steps; i++) {
+                    const tt = tMin + (tMax - tMin) * (i / steps);
+                    const xx = solutionX0 + solutionV * tt;
+                    const px = map(tt, tMin, tMax, axisY, graphRight - 20);
+                    const py = map(xx, xMinGraph, xMaxGraph, graphBottom - 20, graphTop + 24);
+                    vertex(px, py);
+                }
+                endShape();
+
+                noStroke();
+                fill(244, 114, 182);
+                textSize(10);
+                textAlign(LEFT, BOTTOM);
+                text("solution x(t)", graphLeft + 14, graphBottom - 26);
+            }
+
+            if (history.length >= 2) {
+                const visiblePoints = history.filter(h => h.t >= tMin && h.t <= tMax);
+                if (visiblePoints.length >= 2) {
+                    stroke(96, 165, 250);
+                    strokeWeight(2);
+                    noFill();
+                    beginShape();
+                    for (const h of visiblePoints) {
+                        const px = map(h.t, tMin, tMax, axisY, graphRight - 20);
+                        const py = map(h.x, xMinGraph, xMaxGraph, graphBottom - 20, graphTop + 24);
+                        vertex(px, py);
+                    }
+                    endShape();
+
+                    const last = visiblePoints[visiblePoints.length - 1];
+                    const pxLast = map(last.t, tMin, tMax, axisY, graphRight - 20);
+                    const pyLast = map(last.x, xMinGraph, xMaxGraph, graphBottom - 20, graphTop + 24);
+                    noStroke();
+                    fill(94, 234, 212);
+                    ellipse(pxLast, pyLast, 7, 7);
+
+                    const tooltipX = pxLast + 8;
+                    const tooltipY = pyLast - 22;
+                    const tooltipW = 110;
+                    const tooltipH = 30;
+
+                    fill(15, 23, 42, 230);
+                    stroke(55, 65, 81);
+                    strokeWeight(1);
+                    rectMode(CORNER);
+                    rect(tooltipX, tooltipY, tooltipW, tooltipH, 6);
+
+                    noStroke();
+                    fill(226, 232, 240);
+                    textSize(10);
+                    textAlign(LEFT, TOP);
+                    text(`t = ${last.t.toFixed(2)} s`, tooltipX + 6, tooltipY + 4);
+                    text(`x = ${last.x.toFixed(2)} m`, tooltipX + 6, tooltipY + 16);
+                }
+            }
+        }
+
+        // ----- Exercise mode helpers -----
+
+        function triggerFeedbackAnimation(className) {
+            document.body.classList.remove("flash-correct", "flash-wrong");
+            void document.body.offsetWidth;
+            document.body.classList.add(className);
+            setTimeout(() => {
+                document.body.classList.remove(className);
+            }, 750);
+        }
+
+        function createNewExercise() {
+            let ok = false;
+            while (!ok) {
+                const candidateX0 = -10 + Math.random() * 20;
+                let candidateV = -6 + Math.random() * 12;
+                if (Math.abs(candidateV) < 1) continue;
+                const candidateT = 2 + Math.random() * 6;
+                const candidateX = candidateX0 + candidateV * candidateT;
+
+                if (candidateX >= -30 && candidateX <= 30) {
+                    solutionX0 = candidateX0;
+                    solutionV = candidateV;
+                    targetT = parseFloat(candidateT.toFixed(1));
+                    targetX = parseFloat(candidateX.toFixed(1));
+                    ok = true;
+                }
+            }
+
+            showSolutionCurve = false;
+            givenParam = Math.random() < 0.5 ? "x0" : "v";
+
+            if (givenParam === "x0") {
+                x0 = solutionX0;
+                x0Slider.value = x0;
+                x0Input.value = x0.toFixed(1);
+                x0Slider.disabled = true;
+                x0Input.disabled = true;
+
+                v = 0;
+                vSlider.value = 0;
+                vInput.value = "0.0";
+                vSlider.disabled = false;
+                vInput.disabled = false;
+            } else {
+                v = solutionV;
+                vSlider.value = v;
+                vInput.value = v.toFixed(1);
+                vSlider.disabled = true;
+                vInput.disabled = true;
+
+                x0 = 0;
+                x0Slider.value = 0;
+                x0Input.value = "0.0";
+                x0Slider.disabled = false;
+                x0Input.disabled = false;
+            }
+
+            updateLabels();
+            resetSimulation(true);
+
+            const givenText = (givenParam === "x0") ?
+                `Given: x₀ = ${solutionX0.toFixed(2)} m` :
+                `Given: v = ${solutionV.toFixed(2)} m/s`;
+
+            exerciseTargetEl.textContent =
+                `Target: reach x = ${targetX.toFixed(1)} m at t = ${targetT.toFixed(1)} s · ${givenText}`;
+            exerciseStatusEl.textContent =
+                "Use the given value and x(t) = x₀ + v·t to find the unknown.";
+            exerciseStatusEl.classList.remove("ok", "bad");
+            exerciseWorkEl.textContent = "";
+        }
+
+        function checkExercise() {
+            if (targetT === null || targetX === null || solutionX0 === null || solutionV === null || !givenParam) {
+                exerciseStatusEl.textContent = "Click “New exercise” first.";
+                exerciseStatusEl.classList.remove("ok", "bad");
+                exerciseWorkEl.textContent = "";
+                return;
+            }
+
+            const t = targetT;
+            const xTarget = targetX;
+            const x0sol = solutionX0;
+            const vsol = solutionV;
+
+            const userX0 = x0;
+            const userV = v;
+
+            const tolX0 = Math.max(0.02, Math.abs(x0sol) * 0.02); // 2% or at least 0.02 m
+            const tolV = Math.max(0.02, Math.abs(vsol) * 0.02); // 2% or at least 0.02 m/s
+
+
+            let correct = false;
+            let workLines = [];
+
+            if (givenParam === "x0") {
+                const errV = userV - vsol;
+                if (Math.abs(errV) <= tolV) correct = true;
+
+                workLines = [
+                    "Paper solution (solving for v):",
+                    "",
+                    "1) Start from the MRU equation:",
+                    "   x(t) = x₀ + v · t",
+                    "",
+                    "2) Use the target point:",
+                    `   At t = ${t.toFixed(1)} s, we want x(t) = ${xTarget.toFixed(1)} m`,
+                    "",
+                    "   So:",
+                    `   ${xTarget.toFixed(1)} = x₀ + v · (${t.toFixed(1)})`,
+                    "",
+                    "3) In this exercise, the initial position is GIVEN:",
+                    `   x₀ = ${x0sol.toFixed(2)} m`,
+                    "",
+                    "   Substitute x₀ and solve for v:",
+                    `   ${xTarget.toFixed(1)} = ${x0sol.toFixed(2)} + v · (${t.toFixed(1)})`,
+                    "",
+                    "   Move x₀ to the left side:",
+                    `   v · (${t.toFixed(1)}) = ${xTarget.toFixed(1)} - ${x0sol.toFixed(2)}`,
+                    `   v = (${xTarget.toFixed(1)} - ${x0sol.toFixed(2)}) / ${t.toFixed(1)}`,
+                    `   v ≈ ${vsol.toFixed(2)} m/s`,
+                    "",
+                    "4) Check:",
+                    `   x(t) = x₀ + v·t = ${x0sol.toFixed(2)} + (${vsol.toFixed(2)}) · (${t.toFixed(1)})`,
+                    `        ≈ ${xTarget.toFixed(2)} m  ✔`
+                ];
+            } else {
+                const errX0 = userX0 - x0sol;
+                if (Math.abs(errX0) <= tolX0) correct = true;
+
+                workLines = [
+                    "Paper solution (solving for x₀):",
+                    "",
+                    "1) Start from the MRU equation:",
+                    "   x(t) = x₀ + v · t",
+                    "",
+                    "2) Use the target point:",
+                    `   At t = ${t.toFixed(1)} s, we want x(t) = ${xTarget.toFixed(1)} m`,
+                    "",
+                    "   So:",
+                    `   ${xTarget.toFixed(1)} = x₀ + v · (${t.toFixed(1)})`,
+                    "",
+                    "3) In this exercise, the velocity is GIVEN:",
+                    `   v = ${vsol.toFixed(2)} m/s`,
+                    "",
+                    "   Substitute v and solve for x₀:",
+                    `   ${xTarget.toFixed(1)} = x₀ + (${vsol.toFixed(2)}) · (${t.toFixed(1)})`,
+                    "",
+                    "   Move the v·t term to the left side:",
+                    `   x₀ = ${xTarget.toFixed(1)} - (${vsol.toFixed(2)}) · (${t.toFixed(1)})`,
+                    `   x₀ ≈ ${x0sol.toFixed(2)} m`,
+                    "",
+                    "4) Check:",
+                    `   x(t) = x₀ + v·t = ${x0sol.toFixed(2)} + (${vsol.toFixed(2)}) · (${t.toFixed(1)})`,
+                    `        ≈ ${xTarget.toFixed(2)} m  ✔`
+                ];
+            }
+
+            const work = workLines.join("\n");
+            showSolutionCurve = true;
+
+            if (correct) {
+                if (givenParam === "x0") {
+                    exerciseStatusEl.textContent =
+                        `Correct! Given x₀ = ${x0sol.toFixed(2)} m, your v ≈ ${userV.toFixed(2)} m/s matches the solution v ≈ ${vsol.toFixed(2)} m/s.`;
+                } else {
+                    exerciseStatusEl.textContent =
+                        `Correct! Given v = ${vsol.toFixed(2)} m/s, your x₀ ≈ ${userX0.toFixed(2)} m matches the solution x₀ ≈ ${x0sol.toFixed(2)} m.`;
+                }
+                exerciseStatusEl.classList.remove("bad");
+                exerciseStatusEl.classList.add("ok");
+                exerciseWorkEl.textContent = work;
+                playing = true;
+                triggerFeedbackAnimation("flash-correct");
+            } else {
+                if (givenParam === "x0") {
+                    exerciseStatusEl.textContent =
+                        `Not correct.\n` +
+                        `Given x₀ = ${x0sol.toFixed(2)} m.\n` +
+                        `Your v = ${userV.toFixed(2)} m/s.\n` +
+                        `Correct v for this exercise: v ≈ ${vsol.toFixed(2)} m/s.`;
+                } else {
+                    exerciseStatusEl.textContent =
+                        `Not correct.\n` +
+                        `Given v = ${vsol.toFixed(2)} m/s.\n` +
+                        `Your x₀ = ${userX0.toFixed(2)} m.\n` +
+                        `Correct x₀ for this exercise: x₀ ≈ ${x0sol.toFixed(2)} m.`;
+                }
+                exerciseStatusEl.classList.remove("ok");
+                exerciseStatusEl.classList.add("bad");
+                exerciseWorkEl.textContent = work;
+                resetSimulation(true);
+                triggerFeedbackAnimation("flash-wrong");
+            }
+        }
+
+        // --- Theory panel logic (same as MRUV) ---
+        function setupTheoryPanel() {
+            const overlay = document.getElementById("theoryOverlay");
+            const openBtn = document.getElementById("openTheoryBtn");
+            const closeBtn = document.getElementById("closeTheoryBtn");
+
+            const open = () => overlay.classList.add("open");
+            const close = () => overlay.classList.remove("open");
+
+            openBtn.addEventListener("click", open);
+            closeBtn.addEventListener("click", close);
+            overlay.addEventListener("click", (e) => {
+                if (e.target === overlay) close();
+            });
+
+            window.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") close();
+            });
+        }
+    </script>
+</body>
+
+</html>

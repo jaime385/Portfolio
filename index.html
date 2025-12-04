@@ -86,7 +86,8 @@
                 <p class="text-xs uppercase tracking-[0.2em] text-zinc-400">Mechanical Engineering · DCS / HMI / SCADA ·
                     ICS Networking</p>
                 <h1 class="mt-3 text-3xl md:text-5xl font-bold leading-tight">
-                    Industrial Automation Engineer building tools for real-world control systems troubleshooting
+                    Mechanical engineer experienced on Industrial Automation, building tools for real-world
+                    control systems diagnostics and troubleshooting
                 </h1>
                 <p class="mt-4 text-zinc-300 text-sm md:text-base leading-relaxed">
                     Results-oriented Mechanical/Industrial Automation Engineer with experience across power generation
@@ -156,7 +157,7 @@
         </div>
 
         <!-- Lab card: Complex Systems Hub (new) -->
-        <div class="rounded-3xl border border-zinc-800 bg-zinc-900/40 shadow-lg overflow-hidden">
+        <div class="rounded-3xl border border-zinc-800 bg-zinc-900/40 shadow-lg overflow-hidden mb-6">
             <!-- Complex systems preview -->
             <div id="p5-holder-complex" class="w-full h-[125px]"></div>
 
@@ -171,6 +172,25 @@
                 </p>
             </div>
         </div>
+
+        <!-- Lab card: Mechanics Virtual Lab Hub (new) -->
+        <div class="rounded-3xl border border-zinc-800 bg-zinc-900/40 shadow-lg overflow-hidden mb-6">
+            <!-- Mechanics preview -->
+            <div id="p5-holder-mechanics" class="w-full h-[125px]"></div>
+
+            <!-- Footer with button + caption -->
+            <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-t border-zinc-800 bg-zinc-950/70">
+                <a href="labs/Mechanics/MechanicsHub.html" target="_blank" rel="noopener noreferrer" class="lab-btn">
+                    Open Mechanics Virtual Lab Hub <span class="text-xs opacity-70">(new tab)</span>
+                </a>
+                <p class="text-xs text-zinc-500">
+                    Explore motion, forces, energy and vibrations with interactive MRU, MRUV, projectile, oscillation
+                    labs, and more.
+                </p>
+            </div>
+        </div>
+
+
     </section>
 
 
@@ -332,7 +352,8 @@
                     logic, datalinks, networks, and HMI graphics with in-house diagnostic tools.
                 </p>
                 <ul class="mt-2 text-sm text-zinc-300 list-disc pl-5">
-                    <li>Designed and developed tools like LogSentinel, ViewHMI Migration Tool, and protocol loggers.
+                    <li>Designed and developed tools for troubleshooting and enhances troubleshooting. E.g Log
+                        analizers, file parsers and translators, and protocol loggers.
                     </li>
                     <li>Mentored engineers on DCS troubleshooting, ICS protocols, and system optimization.</li>
                     <li>Field assignments in the USA (L1-B): IPP (UT), Duke Energy (NC), SCE Bishop (CA), Crusoe (TX)
@@ -798,7 +819,200 @@
         };
 
         new p5(complexPreview);
+
+
+        /* ========= p5.js preview #3 – Mechanics Lab (cart on bumpy road) ========= */
+        const mechanicsPreview = (p) => {
+            let gears = [];
+
+            p.setup = () => {
+                const holder = document.getElementById("p5-holder-mechanics");
+                if (!holder) return;
+
+                const w = holder.clientWidth || 320;
+                const h = holder.clientHeight || 125;
+
+                const canvas = p.createCanvas(w, h);
+                canvas.parent(holder);
+                p.pixelDensity(1.5);
+
+                initGears();
+            };
+
+            p.windowResized = () => {
+                const holder = document.getElementById("p5-holder-mechanics");
+                if (!holder) return;
+                const w = holder.clientWidth || 320;
+                const h = holder.clientHeight || 125;
+                p.resizeCanvas(w, h);
+                initGears();
+            };
+
+            function initGears() {
+                gears = [];
+
+                const cx = p.width * 0.28;
+                const cy = p.height * 0.55;
+
+                // radii ~ diameters of gears (in px)
+                const r1 = 22;
+                const r2 = 16;
+                const r3 = 28;
+                const r4 = 14;
+
+                // base gear (driving)
+                const baseSpeed = 0.03;
+
+                const g1 = {
+                    x: cx,
+                    y: cy,
+                    r: r1,
+                    angle: 0,
+                    speed: baseSpeed,
+                    dir: 1,
+                    teeth: 16,
+                    color: p.color(248, 113, 113) // reddish
+                };
+
+                // gear 2 meshes with 1
+                const g2 = {
+                    x: cx + r1 + r2 + 4,
+                    y: cy,
+                    r: r2,
+                    angle: 0,
+                    // ω2 = -ω1 * r1 / r2  (inverse proportional, opposite direction)
+                    speed: -baseSpeed * (r1 / r2),
+                    dir: -1,
+                    teeth: 12,
+                    color: p.color(96, 165, 250) // blue
+                };
+
+                // gear 3 meshes with 2 (above)
+                const g3 = {
+                    x: g2.x + r2 + r3 + 4,
+                    y: cy,
+                    r: r3,
+                    angle: 0,
+                    speed: -g2.speed * (r2 / r3), // opposite of g2, scaled
+                    dir: 1,
+                    teeth: 20,
+                    color: p.color(52, 211, 153) // green
+                };
+
+                // idler gear on top of g2
+                const g4 = {
+                    x: g2.x,
+                    y: cy - (r2 + r4 + 4),
+                    r: r4,
+                    angle: 0,
+                    speed: -g2.speed * (r2 / r4),
+                    dir: -1,
+                    teeth: 10,
+                    color: p.color(244, 114, 182) // magenta
+                };
+
+                gears.push(g1, g2, g3, g4);
+            }
+
+            function drawBackground() {
+                const top = p.color(20, 24, 38);
+                const bottom = p.color(5, 8, 22);
+                for (let y = 0; y < p.height; y++) {
+                    const c = p.lerpColor(top, bottom, y / p.height);
+                    p.stroke(c);
+                    p.line(0, y, p.width, y);
+                }
+
+                // subtle grid
+                p.stroke(30, 41, 59, 140);
+                p.strokeWeight(1);
+                for (let x = 0; x < p.width; x += 20) p.line(x, 0, x, p.height);
+                for (let y = 0; y < p.height; y += 20) p.line(0, y, p.width, y);
+            }
+
+            function updateGears() {
+                for (const g of gears) {
+                    g.angle += g.speed;
+                }
+            }
+
+            function drawGear(g) {
+                // teeth ring
+                const teeth = g.teeth;
+                const toothDepth = 4;
+                const baseR = g.r;
+                const outerR = baseR + toothDepth;
+
+                // outer glow
+                p.noStroke();
+                p.fill(p.red(g.color), p.green(g.color), p.blue(g.color), 40);
+                p.circle(g.x, g.y, outerR * 2.4);
+
+                // teeth
+                p.stroke(g.color);
+                p.strokeWeight(2);
+                for (let i = 0; i < teeth; i++) {
+                    const a1 = g.angle + (i / teeth) * p.TWO_PI;
+                    const a2 = a1 + (p.TWO_PI / teeth) * 0.6;
+
+                    const rInner = baseR;
+                    const rOuter = outerR;
+
+                    const x1 = g.x + rInner * Math.cos(a1);
+                    const y1 = g.y + rInner * Math.sin(a1);
+                    const x2 = g.x + rOuter * Math.cos(a1);
+                    const y2 = g.y + rOuter * Math.sin(a1);
+
+                    p.line(x1, y1, x2, y2);
+                }
+
+                // main body
+                p.noStroke();
+                p.fill(15, 23, 42);
+                p.circle(g.x, g.y, baseR * 2);
+
+                // spokes
+                p.stroke(148, 163, 184);
+                p.strokeWeight(2);
+                const spokeR = baseR * 0.7;
+                for (let i = 0; i < 4; i++) {
+                    const a = g.angle + (i * p.HALF_PI);
+                    const x1 = g.x + 6 * Math.cos(a);
+                    const y1 = g.y + 6 * Math.sin(a);
+                    const x2 = g.x + spokeR * Math.cos(a);
+                    const y2 = g.y + spokeR * Math.sin(a);
+                    p.line(x1, y1, x2, y2);
+                }
+
+                // hub
+                p.noStroke();
+                p.fill(226, 232, 240);
+                p.circle(g.x, g.y, baseR * 0.35);
+            }
+
+            function drawLabels() {
+
+            }
+
+            p.draw = () => {
+                drawBackground();
+                updateGears();
+
+                // center the little “gear train scene”
+                p.push();
+                p.translate(0, 0);
+                for (const g of gears) {
+                    drawGear(g);
+                }
+                p.pop();
+
+                drawLabels();
+            };
+        };
+
+        new p5(mechanicsPreview);
     </script>
+
 
 </body>
 
